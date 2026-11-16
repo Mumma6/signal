@@ -2,7 +2,7 @@
 
 **Stay ahead of AI. Without the noise.**
 
-[Read Signal →](https://signal-mumma6s-projects.vercel.app) · [Source on GitHub](https://github.com/Mumma6/signal) · [CI](https://github.com/Mumma6/signal/actions/workflows/ci.yml)
+[Read Signal →](https://signal-gold-five.vercel.app) · [Source on GitHub](https://github.com/Mumma6/signal) · [CI](https://github.com/Mumma6/signal/actions/workflows/ci.yml)
 
 Signal is an independent daily AI briefing for developers and curious technologists. It pairs short, attributed source excerpts with transparent selection context, recurring themes, and popular, actively maintained open-source projects. **All curation runs locally. No OpenAI account, model API, inference service, or model key is needed.**
 
@@ -100,7 +100,7 @@ See [architecture and operational details](docs/architecture.md) for leases, rec
 
 ## Deploy to Vercel
 
-The public application runs on [Vercel](https://signal-mumma6s-projects.vercel.app), backed by Neon PostgreSQL in Frankfurt. Production and development use separate database branches and credentials. Pushes to `main` deploy through the connected GitHub repository. Installation scripts never provision resources, run migrations, or deploy automatically.
+The public application runs on [Vercel](https://signal-gold-five.vercel.app), backed by Neon PostgreSQL in Frankfurt. Production and development use separate database branches and credentials. Pushes to `main` deploy through the connected GitHub repository. Installation scripts never provision resources, run migrations, or deploy automatically.
 
 To deploy your own instance:
 
