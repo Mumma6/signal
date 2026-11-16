@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794859049059,
+      "tag": "0000_outgoing_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794860002494,
+      "tag": "0001_secret_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794863850199,
+      "tag": "0002_abandoned_winter_soldier",
+      "breakpoints": true
+    }
+  ]
+}

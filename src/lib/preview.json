@@ -1,0 +1,298 @@
+{
+  "id": "preview-2026-11-16",
+  "date": "2026-11-16",
+  "title": "How MoEngage built agentic customer engagement on Amazon Bedrock AgentCore",
+  "description": "6 developments worth your attention. Grounded summaries, original sources, and a little perspective.",
+  "stories": [
+    {
+      "id": "38a73038f401258c1101cee1b87d010cae924cf6e06991abb42f655846d02772",
+      "title": "How MoEngage built agentic customer engagement on Amazon Bedrock AgentCore",
+      "url": "https://aws.amazon.com/blogs/machine-learning/how-moengage-built-agentic-customer-engagement-on-amazon-bedrock-agentcore",
+      "sourceName": "AWS Machine Learning",
+      "publishedAt": "2026-11-16T18:16:07.000Z",
+      "category": "Developer tools",
+      "summary": "A marketing or product team member planning a weekend flash sale often opens three tools before writing a single line of copy. First they open",
+      "whyItMatters": "An official update from AWS Machine Learning, selected for developer tools coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "A marketing or product team member planning a weekend flash sale often opens three tools before writing a single line of copy. First they open"
+      ],
+      "summaryKind": "source-excerpt"
+    },
+    {
+      "id": "fa3c1ec1e457a5f68b920319274a3aba57461a2d01448af71022a1d7e55562c2",
+      "title": "How Duco transforms financial data automation with Amazon Bedrock AgentCore",
+      "url": "https://aws.amazon.com/blogs/machine-learning/how-duco-transforms-financial-data-automation-with-amazon-bedrock-agentcore",
+      "sourceName": "AWS Machine Learning",
+      "publishedAt": "2026-11-16T22:06:08.000Z",
+      "category": "Industry",
+      "summary": "Financial institutions face a critical challenge: processing massive volumes of data with speed, accuracy, and compliance while operating under some of the world’s strictest regulatory",
+      "whyItMatters": "An official update from AWS Machine Learning, selected for industry coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "Financial institutions face a critical challenge: processing massive volumes of data with speed, accuracy, and compliance while operating under some of the world’s strictest regulatory"
+      ],
+      "summaryKind": "source-excerpt"
+    },
+    {
+      "id": "d91fd06de7b8771ee8ad78bbe6c6a0f8795962915436321f9652c6b42b553b9c",
+      "title": "Science at the Frontier: How scientists use ChatGPT",
+      "url": "https://openai.com/index/science-at-the-frontier",
+      "sourceName": "OpenAI",
+      "publishedAt": "2026-11-16T12:00:00.000Z",
+      "category": "Research",
+      "summary": "Explore how more than 1,800 scientists use ChatGPT in research. See findings on daily workflows, reported productivity, and expectations for discovery.",
+      "whyItMatters": "An official update from OpenAI, selected for research coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "Explore how more than 1,800 scientists use ChatGPT in research. See findings on daily workflows, reported productivity, and expectations for discovery."
+      ],
+      "summaryKind": "source-excerpt"
+    },
+    {
+      "id": "4e2b4f1543d148003d9a74b767a72230b5413c58fe8687b737882e83448700f5",
+      "title": "v2.1.326",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.326",
+      "sourceName": "Claude Code releases",
+      "publishedAt": "2026-11-16T22:11:05.000Z",
+      "category": "Developer tools",
+      "summary": "What's changed Added support for turning on Code Mode while agent teams are enabled; if you already turned it on, sessions with teams on now",
+      "whyItMatters": "An official update from Claude Code releases, selected for developer tools coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "What's changed Added support for turning on Code Mode while agent teams are enabled; if you already turned it on, sessions with teams on now"
+      ],
+      "summaryKind": "source-excerpt"
+    },
+    {
+      "id": "7ec90737528b7237217e720513f21322afae611f7f41243ae1332cbfc0140e90",
+      "title": "NVIDIA Vera Rubin NVL72 Achieves up to 2x Blackwell Ultra Performance in MLPerf Training v6.1",
+      "url": "https://developer.nvidia.com/blog/nvidia-vera-rubin-nvl72-achieves-up-to-2x-blackwell-ultra-performance-in-mlperf-training-v6-1",
+      "sourceName": "NVIDIA Technical Blog",
+      "publishedAt": "2026-11-16T16:00:00.000Z",
+      "category": "Developer tools",
+      "summary": "As AI agents tackle increasingly complex workflows, reducing time-to-train is critical for rapidly iterating on both models and the agents they power. MLPerf... As AI",
+      "whyItMatters": "An official update from NVIDIA Technical Blog, selected for developer tools coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "As AI agents tackle increasingly complex workflows, reducing time-to-train is critical for rapidly iterating on both models and the agents they power. MLPerf... As AI"
+      ],
+      "summaryKind": "source-excerpt"
+    },
+    {
+      "id": "bd4930e0839976d3ed7ae4ae4e5c5125f600cbee13ee2ddb01419df241a4863a",
+      "title": "NVIDIA Vera Rubin NVL72 Leads Agentic Inference Performance on MLPerf Endpoints v1.0",
+      "url": "https://developer.nvidia.com/blog/nvidia-vera-rubin-nvl72-leads-agentic-inference-performance-on-mlperf-endpoints-v1-0",
+      "sourceName": "NVIDIA Technical Blog",
+      "publishedAt": "2026-11-16T16:00:00.000Z",
+      "category": "Developer tools",
+      "summary": "Agentic workloads are demanding more from inference systems. AI agents carry growing conversation histories across turns and generate a mix of reasoning, tool... Agentic workloads",
+      "whyItMatters": "An official update from NVIDIA Technical Blog, selected for developer tools coverage. Read the original for details, scope, and limitations.",
+      "evidence": [
+        "Agentic workloads are demanding more from inference systems. AI agents carry growing conversation histories across turns and generate a mix of reasoning, tool... Agentic workloads"
+      ],
+      "summaryKind": "source-excerpt"
+    }
+  ],
+  "repositories": [
+    {
+      "name": "Lanier-Developments/ControlPlane",
+      "description": "Governance-first RAG reference implementation: database-enforced permissions, policy-gated model routing, a tamper-evident evidence ledger, and red-teamed prompt-injection defenses.",
+      "url": "https://github.com/Lanier-Developments/ControlPlane",
+      "stars": 0,
+      "language": "Python",
+      "pushedAt": "2026-11-16T22:09:33Z",
+      "createdAt": "2026-09-13T07:58:26Z",
+      "license": "MIT",
+      "discoveryTopic": "llm",
+      "release": "v0.1.0",
+      "releaseUrl": "https://github.com/Lanier-Developments/ControlPlane/releases/tag/v0.1.0",
+      "releasePublishedAt": "2026-10-14T11:16:42Z",
+      "reason": "Discovered in llm: created within the last 90 days, pushed within 14 days, with a declared MIT license.",
+      "collectedAt": "2026-11-16T22:11:18.310Z"
+    },
+    {
+      "name": "pri-te-sh/anycubic-slicer-mcp",
+      "description": "MCP server that lets AI agents slice, preview, diagnose and tune 3D prints with Anycubic Slicer Next on Windows and macOS",
+      "url": "https://github.com/pri-te-sh/anycubic-slicer-mcp",
+      "stars": 0,
+      "language": "Python",
+      "pushedAt": "2026-11-16T22:10:38Z",
+      "createdAt": "2026-11-16T05:54:15Z",
+      "license": "MIT",
+      "discoveryTopic": "ai-agents",
+      "release": null,
+      "releaseUrl": null,
+      "releasePublishedAt": null,
+      "reason": "Discovered in ai-agents: created within the last 90 days, pushed within 14 days, with a declared MIT license.",
+      "collectedAt": "2026-11-16T22:11:18.310Z"
+    },
+    {
+      "name": "kleberandrade/neural-engine",
+      "description": "Pure Dart neural networks: MLP, Kohonen SOM, trainable CNNs and autoencoder examples, with educational Dart/Flutter labs and bilingual guides.",
+      "url": "https://github.com/kleberandrade/neural-engine",
+      "stars": 1,
+      "language": "Dart",
+      "pushedAt": "2026-11-16T22:07:37Z",
+      "createdAt": "2026-11-16T17:16:02Z",
+      "license": "MIT",
+      "discoveryTopic": "machine-learning",
+      "release": "v0.3.0",
+      "releaseUrl": "https://github.com/kleberandrade/neural-engine/releases/tag/v0.3.0",
+      "releasePublishedAt": "2026-11-16T21:44:47Z",
+      "reason": "Discovered in machine-learning: created within the last 90 days, pushed within 14 days, with a declared MIT license.",
+      "collectedAt": "2026-11-16T22:11:18.310Z"
+    },
+    {
+      "name": "MathStruct/Lenticulum.jl",
+      "description": "An Implicit Learning Library on factor graphs",
+      "url": "https://github.com/MathStruct/Lenticulum.jl",
+      "stars": 4,
+      "language": "Julia",
+      "pushedAt": "2026-11-16T22:07:18Z",
+      "createdAt": "2026-09-05T21:31:33Z",
+      "license": "MIT",
+      "discoveryTopic": "machine-learning",
+      "release": "20261015.1-proto",
+      "releaseUrl": "https://github.com/MathStruct/Lenticulum.jl/releases/tag/20261015.1-proto",
+      "releasePublishedAt": "2026-10-15T12:55:55Z",
+      "reason": "Discovered in machine-learning: created within the last 90 days, pushed within 14 days, with a declared MIT license.",
+      "collectedAt": "2026-11-16T22:11:18.310Z"
+    }
+  ],
+  "themes": [],
+  "reports": [
+    {
+      "source": "openai",
+      "count": 10,
+      "invalid": 10,
+      "status": "ok"
+    },
+    {
+      "source": "codex",
+      "count": 0,
+      "invalid": 1,
+      "status": "ok"
+    },
+    {
+      "source": "anthropic",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "claude-code",
+      "count": 1,
+      "invalid": 9,
+      "status": "ok"
+    },
+    {
+      "source": "cursor",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "xai",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "mistral",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "deepmind",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "gemini",
+      "count": 1,
+      "invalid": 19,
+      "status": "ok"
+    },
+    {
+      "source": "gemini-models",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "google-research",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "huggingface",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    },
+    {
+      "source": "nvidia",
+      "count": 3,
+      "invalid": 17,
+      "status": "ok"
+    },
+    {
+      "source": "microsoft-research",
+      "count": 1,
+      "invalid": 9,
+      "status": "ok"
+    },
+    {
+      "source": "aws-ml",
+      "count": 9,
+      "invalid": 11,
+      "status": "ok"
+    },
+    {
+      "source": "github-ai",
+      "count": 0,
+      "invalid": 10,
+      "status": "ok"
+    },
+    {
+      "source": "devto",
+      "count": 12,
+      "invalid": 0,
+      "status": "ok"
+    },
+    {
+      "source": "simon-willison",
+      "count": 6,
+      "invalid": 14,
+      "status": "ok"
+    },
+    {
+      "source": "arxiv",
+      "count": 0,
+      "invalid": 12,
+      "status": "ok"
+    },
+    {
+      "source": "hackernews",
+      "count": 0,
+      "invalid": 20,
+      "status": "ok"
+    }
+  ],
+  "sample": true,
+  "sampleKind": "source-snapshot",
+  "publishedAt": "2026-11-16T22:11:18.310Z",
+  "partial": false,
+  "outcomes": {
+    "collected": 43,
+    "duplicates": 0,
+    "invalid": 292,
+    "evaluated": 22,
+    "selected": 6,
+    "rejected": 37,
+    "summaries": 6,
+    "sourcesUnavailable": 0,
+    "repositories": 4,
+    "releaseFailures": 0,
+    "summaryFailures": 0
+  }
+}
