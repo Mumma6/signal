@@ -6,6 +6,7 @@ import { mapSettled } from "@/lib/concurrency";
 
 export const radarTopics = ["llm", "ai-agents", "machine-learning"] as const;
 export const radarLimit = 6;
+export const radarMinimumStars = 1000;
 const day = 86400000;
 const nameSchema = z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
 export const githubRepoSchema = z
@@ -46,7 +47,7 @@ const releaseSchema = z.object({
 
 export function radarSearchUrl(topic: string, now: Date) {
   const date = (age: number) => new Date(now.getTime() - age * day).toISOString().slice(0, 10);
-  const query = `topic:${topic} created:>=${date(90)} pushed:>=${date(14)} archived:false fork:false is:public size:>10`;
+  const query = `topic:${topic} stars:>=${radarMinimumStars} pushed:>=${date(14)} archived:false fork:false is:public size:>10`;
   return `https://api.github.com/search/repositories?${new URLSearchParams({ q: query, sort: "updated", order: "desc", per_page: "10" })}`;
 }
 export function eligibleRepository(repo: GitHubRepo, now: Date) {
@@ -59,6 +60,7 @@ export function eligibleRepository(repo: GitHubRepo, now: Date) {
     !repo.private &&
     !repo.is_template &&
     !repo.mirror_url &&
+    repo.stargazers_count >= radarMinimumStars &&
     !!repo.license &&
     !["NOASSERTION", "NONE"].includes(repo.license.spdx_id) &&
     repo.size > 10 &&
@@ -68,7 +70,6 @@ export function eligibleRepository(repo: GitHubRepo, now: Date) {
       repo.description ?? "",
     ) &&
     created <= now.getTime() &&
-    created >= now.getTime() - 90 * day &&
     pushed <= now.getTime() + 300000 &&
     pushed >= now.getTime() - 14 * day &&
     !/(?:^|[-_])(?:awesome|collection|prompts|courses?|tutorials?|roadmap|list)(?:$|[-_])/i.test(
@@ -90,7 +91,7 @@ export function selectRepositories(candidates: { repo: GitHubRepo; topic: string
       .filter((c) => c.topic === topic)
       .sort(
         (a, b) =>
-          b.repo.created_at.localeCompare(a.repo.created_at) ||
+          (b.repo.pushed_at ?? "").localeCompare(a.repo.pushed_at ?? "") ||
           a.repo.full_name.localeCompare(b.repo.full_name),
       ),
   );
@@ -172,7 +173,7 @@ export async function collectRepositories(now = new Date(), read: typeof fetchTe
           release: release?.tag_name ?? null,
           releaseUrl: release?.html_url ?? null,
           releasePublishedAt: release?.published_at ?? null,
-          reason: `Discovered in ${topic}: created within the last 90 days, pushed within 14 days, with a declared ${repo.license!.spdx_id} license.`,
+          reason: `Popular in ${topic}: at least 1,000 stars, pushed within 14 days, with a declared ${repo.license!.spdx_id} license.`,
           collectedAt: now.toISOString(),
         } satisfies Repository;
       },

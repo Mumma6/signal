@@ -862,3 +862,147 @@ summary::-webkit-details-marker {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The briefing reader keeps the first story in view and browsing deliberate. */
+.reader-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 48px 0 32px;
+  gap: 24px;
+}
+.reader-intro h1 {
+  font-size: clamp(28px, 3.4vw, 43px);
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+  font-weight: 450;
+}
+.reader-intro p {
+  margin-top: 12px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.reader-intro-mark {
+  font-size: 56px;
+  font-weight: 350;
+  letter-spacing: -6px;
+  color: #d4ddf6;
+}
+.reader-intro-mark span {
+  margin-left: 7px;
+  color: #758fd5;
+  font-weight: 200;
+}
+.reader-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 40px;
+  padding-top: 32px;
+}
+.reader-story {
+  padding: 32px;
+  background: linear-gradient(135deg, #11141d, #101116);
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+}
+.reader-title {
+  font-size: clamp(25px, 2.6vw, 35px);
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  font-weight: 450;
+  text-wrap: pretty;
+}
+.reader-summary {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.85;
+  color: #b5bac6;
+}
+.reader-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+}
+.reader-navigation button,
+.reader-navigation a {
+  min-height: 42px;
+}
+.reader-contents {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.reader-contents li + li {
+  border-top: 1px solid var(--border);
+}
+.reader-contents-button {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  padding: 15px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #8f95a4;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.reader-contents-button:hover {
+  color: #e1e6f1;
+  background: #a4b9ff06;
+}
+.reader-contents-button.active {
+  color: #e1e6f1;
+  background: #a4b9ff0b;
+  box-shadow: inset 2px 0 #a4b9ff;
+}
+.reader-contents-button:focus-visible {
+  outline: 2px solid #a4b9ff;
+  outline-offset: -2px;
+}
+.reader-aside .radar-aside {
+  margin-top: 24px;
+}
+@media (max-width: 900px) {
+  .reader-layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 24px;
+  }
+  .reader-story {
+    padding: 25px;
+  }
+}
+@media (max-width: 700px) {
+  .reader-intro {
+    padding-top: 32px;
+  }
+  .reader-intro-mark {
+    display: none;
+  }
+  .reader-layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-top: 25px;
+  }
+  .reader-story {
+    padding: 24px 20px;
+  }
+  .reader-summary {
+    font-size: 14px;
+  }
+  .reader-title {
+    font-size: 27px;
+  }
+  .reader-contents-button {
+    padding: 12px 15px;
+  }
+  .reader-navigation button,
+  .reader-navigation a {
+    font-size: 12px;
+    padding-inline: 12px;
+  }
+}

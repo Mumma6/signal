@@ -18,7 +18,8 @@
     "sources:check": "tsx scripts/check-sources.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview:refresh": "tsx scripts/preview.ts"
+    "preview:refresh": "tsx scripts/preview.ts",
+    "radar:refresh": "tsx scripts/refresh-radar.ts"
   },
   "engines": {
     "node": ">=22.12.0"

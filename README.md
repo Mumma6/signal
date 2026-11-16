@@ -2,9 +2,11 @@
 
 **Stay ahead of AI. Without the noise.**
 
-Signal is an independent daily AI briefing for developers and curious technologists. It pairs short, attributed source excerpts with transparent selection context, recurring themes, and fresh open-source discoveries. **All curation runs locally. No OpenAI account, model API, inference service, or model key is needed.**
+[Read Signal →](https://signal-mumma6s-projects.vercel.app) · [Source on GitHub](https://github.com/Mumma6/signal) · [CI](https://github.com/Mumma6/signal/actions/workflows/ci.yml)
 
-The interface is built for reading: self-hosted Geist typography, a charcoal and muted-blue palette, original wave artwork, responsive editorial layouts, topic filters, source notes, keyboard-accessible search, an archive, and RSS. There are no accounts, personalization services, or advertising trackers.
+Signal is an independent daily AI briefing for developers and curious technologists. It pairs short, attributed source excerpts with transparent selection context, recurring themes, and popular, actively maintained open-source projects. **All curation runs locally. No OpenAI account, model API, inference service, or model key is needed.**
+
+The interface is built for reading: self-hosted Geist typography, a charcoal and muted-blue palette, original wave artwork, a focused one-story reader with Next/Previous controls, source notes, keyboard-accessible search, an archive, and RSS. There are no accounts, personalization services, or advertising trackers.
 
 ## Run locally
 
@@ -40,7 +42,7 @@ npm run sources:check
 npm run briefing:generate
 ```
 
-Refresh the homepage. Subsequent invocations for that UTC date return `already-published`. Published editions are immutable through the pipeline.
+Refresh the homepage. Subsequent invocations for that UTC date return `already-published`. Published stories are immutable through the pipeline. The explicit `radar:refresh` maintenance command can replace only today's GitHub metadata after a complete collection; it never rewrites news or older editions.
 
 ### Environment
 
@@ -68,6 +70,8 @@ npm run preview:refresh     # Refresh the dated local preview without any model 
 npm run db:generate         # Generate a migration after changing the schema
 npm run db:migrate          # Apply checked-in migrations through the direct database URL
 npm run briefing:generate   # Generate or resume today's UTC edition
+npm run radar:refresh       # Explicitly refresh only today's published GitHub snapshot
+npm run radar:refresh -- --preview # Update today's local radar snapshot instead
 ```
 
 An optional date resumes a saved older run or returns an already-published edition:
@@ -88,7 +92,7 @@ Local rules score AI relevance and technical usefulness, classify stories, and u
 
 “In the conversation” discovers recurring two- and three-word phrases across relevant, nonduplicate developments from at least two independent publisher groups. It uses the last seven days of material from the same feed reads, while news cards stay within 48 hours. A phrase must also appear in a headline. There is no hardcoded list of fashionable topics; the same vendor's feeds count as one voice. Counts describe this collection, rather than internet-wide popularity. The section is omitted when evidence is insufficient. Keyword rules can miss nuance or synonyms; original-source claims are not independent verification.
 
-GitHub Radar runs three date-bounded topic searches, for LLMs, AI agents, and machine learning. It seeks projects created within 90 days and pushed within 14 days, with a declared license, code language, technical description, and nontrivial repository size. Forks, mirrors, templates, archived repositories, and common link lists are excluded. Up to six discoveries are balanced across topics and owners. Placement uses creation dates within a topic, never stars. The latest stable release is fetched for the selected projects. These are transparent discovery signals, not a code audit or an endorsement.
+GitHub Radar searches LLM, AI-agent, and machine-learning topics for projects with **at least 1,000 stars** and a push within 14 days. There is no creation-date cutoff: established projects can have important new releases. A declared license, code language, technical description, and nontrivial repository size are required. Forks, mirrors, templates, archived repositories, and common link lists are excluded. Up to six discoveries are balanced across topics and owners, ordered by recent push within each topic. Stars establish popularity, not code quality. Latest stable release tags and dates are fetched for selected projects. Every card preserves its collection timestamp.
 
 The database stores four entities: `sources`, `articles`, `briefings`, and `briefing_articles`. A briefing row also holds recurring themes, the GitHub snapshot, source results, business outcomes, and unpublished progress. Publication inserts source articles and ordered excerpts in one transaction. Each story retains its immutable source snapshot and content-provenance label. Existing legacy summaries retain their original label. Unique date, article URL, article membership, and position constraints prevent duplicate publication.
 
@@ -96,7 +100,9 @@ See [architecture and operational details](docs/architecture.md) for leases, rec
 
 ## Deploy to Vercel
 
-The repository is ready for Vercel but **no resources are created and no deployment is performed by setup**.
+The public application runs on [Vercel](https://signal-mumma6s-projects.vercel.app), backed by Neon PostgreSQL in Frankfurt. Production and development use separate database branches and credentials. Pushes to `main` deploy through the connected GitHub repository. Installation scripts never provision resources, run migrations, or deploy automatically.
+
+To deploy your own instance:
 
 1. After approving resource creation yourself, create a Neon project in your preferred region. Use a separate Neon branch for development and preview; do not point previews at production.
 2. Add the runtime variables above to a Vercel Next.js project. Use Node.js 24, `npm ci`, and `npm run build`. Keep production and preview credentials separate. `DATABASE_URL_UNPOOLED` is needed in your migration environment, not by the deployed application.
@@ -106,6 +112,8 @@ The repository is ready for Vercel but **no resources are created and no deploym
 
 `vercel.json` schedules generation at **06:00 UTC** and an idempotent recovery attempt at **08:00 UTC**. In Stockholm this is 07:00/09:00 in winter and 08:00/10:00 in summer. Edition dates use UTC. Vercel Hobby jobs may run within their scheduled hour rather than at the exact minute. Cron only runs for production deployments.
 
+Both schedules fit Hobby's daily frequency limit. Cron has no separate charge; executions count toward normal function usage. The current Hobby allowance is 100 cron jobs per project, each running at most once per day. Check [Vercel's current cron limits](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing) when choosing a plan.
+
 Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically. Missing, short, or incorrect secrets fail closed. Neither endpoint accepts a caller-selected date. The recovery job returns immediately when the edition is already published. Vercel does not automatically retry failed cron executions; the second schedule and manual command provide recovery.
 
 When manually invoking the route, keep the secret in a trusted environment and send it in the Authorization header, never in a URL. A `200` response means publication or an already-published edition; `202` means another invocation owns the lease or saved work remains; `503` means processing failed and can be retried safely. A pending response requires a later invocation; the response body alone does not schedule work.
@@ -114,9 +122,9 @@ Useful deployment references: [Vercel cron management](https://vercel.com/docs/c
 
 ## Verification
 
-Vitest tests deterministic normalization, RSS/Atom and official-page parsing, relevance rules, themes, publisher diversity, bounded concurrency, fresh repository discovery, evidence checks, cron authorization, RSS escaping, partial failures, idempotency, and deadline recovery. A development-only PGlite PostgreSQL engine applies the checked-in migrations and exercises the real store queries: lease exclusion, expiry takeover, stale-worker fencing, transaction rollback, foreign keys, and unique dates. Tests require no external credentials or running database. A test explicitly forbids network calls while exercising the local editor.
+Vitest tests deterministic normalization, RSS/Atom and official-page parsing, relevance rules, themes, publisher diversity, bounded concurrency, popular and active repository selection, evidence checks, cron authorization, RSS escaping, partial failures, idempotency, and deadline recovery. A development-only PGlite PostgreSQL engine applies the checked-in migrations and exercises the real store queries: lease exclusion, expiry takeover, stale-worker fencing, transaction rollback, foreign keys, and unique dates. Tests require no external credentials or running database. A test explicitly forbids network calls while exercising the local editor.
 
-The GitHub Actions workflow runs formatting, type checks, lint, tests, and the production build. Browser QA covers desktop and mobile navigation, search, topic filtering, source dialogs, and archive behavior. Live publication needs your database configuration; collection, curation, themes, and the dated preview can be exercised independently without one.
+The GitHub Actions workflow runs formatting, type checks, lint, tests, and the production build. Browser QA covers desktop and mobile navigation, search, next/previous browsing, source dialogs, and archive behavior. Live publication needs your database configuration; collection, curation, themes, and the dated preview can be exercised independently without one.
 
 ESLint 9 and TypeScript 6 are intentionally used because the current Next.js ESLint plugin dependencies do not yet support ESLint 10 / TypeScript 7 together. Runtime libraries use the current stable versions resolved in `package-lock.json`.
 

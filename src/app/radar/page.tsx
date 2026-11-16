@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "GitHub Radar",
   description:
-    "Fresh AI open-source projects discovered through recent creation, development activity, and declared licensing.",
+    "Popular AI open-source projects with at least 1,000 stars, recent development activity, and declared licensing.",
 };
 export const dynamic = "force-dynamic";
 export default async function RadarPage() {
@@ -24,13 +24,13 @@ export default async function RadarPage() {
           <span className="text-muted-foreground">Find what’s next.</span>
         </h1>
         <p>
-          Fresh open-source AI projects discovered through recent creation, active development, and
-          declared licensing. New code to explore, with the reasons behind each discovery.
+          Popular AI projects. Recent activity. The latest releases. Every project has at least
+          1,000 stars and a declared license.
         </p>
       </section>
       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-5">
         <span className="eyebrow">
-          FRESH DISCOVERIES{" "}
+          POPULAR & ACTIVE{" "}
           <span className="ml-2 text-muted-foreground">
             / {edition?.repositories.length ?? 0} PROJECTS
           </span>
@@ -57,13 +57,13 @@ export default async function RadarPage() {
       <div className="editorial-note">
         <h2>Discovery with context.</h2>
         <p>
-          Signal searches GitHub’s LLM, AI agent, and machine-learning topics for projects created
-          within 90 days and pushed within 14 days. It requires a declared license, a meaningful
+          Signal searches GitHub’s LLM, AI agent, and machine-learning topics for projects with at
+          least 1,000 stars and a push within 14 days. Established projects are welcome; freshness
+          comes from development activity and releases. It requires a declared license, a meaningful
           description, and a code language, and excludes forks, mirrors, archived repositories,
           templates, and common link collections. Picks are balanced across topics and owners,
-          ordered by creation date within each topic. Stars are context only. These signals help you
-          find fresh work; they do not establish code quality or safety. Activity and releases
-          reflect the dated collection.
+          ordered by recent push within each topic. Stars are a popularity threshold, rather than a
+          quality or safety assessment. Activity and releases reflect the dated collection.
         </p>
         <a
           href="https://github.com/topics/artificial-intelligence"

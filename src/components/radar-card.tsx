@@ -20,9 +20,8 @@ export function RadarCard({ repo, compact = false }: { repo: Repository; compact
         </div>
         <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" />
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
-        {compact ? repo.description : repo.reason}
-      </p>
+      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">{repo.description}</p>
+      {!compact && <p className="mt-3 text-[11px] leading-relaxed text-signal/80">{repo.reason}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground">
         {repo.language && (
           <span className="flex items-center gap-1.5">
@@ -51,7 +50,7 @@ export function RadarCard({ repo, compact = false }: { repo: Repository; compact
           {repo.createdAt && (
             <p className="flex items-center gap-2">
               <Tag className="size-3.5" />
-              Created {formatDate(repo.createdAt)}
+              Project started {formatDate(repo.createdAt)}
             </p>
           )}
           <p className="flex items-center gap-2">
@@ -69,7 +68,8 @@ export function RadarCard({ repo, compact = false }: { repo: Repository; compact
                 rel="noopener noreferrer"
                 className="hover:text-signal"
               >
-                Latest release: {repo.release} ↗
+                Latest release: {repo.release}
+                {repo.releasePublishedAt ? ` · ${formatDate(repo.releasePublishedAt)}` : ""} ↗
               </a>
             ) : (
               "No release data in this snapshot"

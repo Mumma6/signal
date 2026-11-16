@@ -24,7 +24,7 @@ const principles = [
   [
     "04 / PUBLISH",
     "One considered edition. Every day.",
-    "A daily collection becomes a short briefing and a snapshot of freshly discovered open-source projects. If a source is unavailable, we can publish a partial edition. If no readable excerpts pass the checks, we keep the last edition available.",
+    "A daily collection becomes a short briefing and a snapshot of popular, actively maintained open-source projects. If a source is unavailable, we can publish a partial edition. If no readable excerpts pass the checks, we keep the last edition available.",
   ],
 ];
 export default function AboutPage() {

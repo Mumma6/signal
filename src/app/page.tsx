@@ -6,6 +6,7 @@ export default async function Home() {
   const edition = await getLatestEdition();
   return edition ? (
     <Briefing
+      key={edition.id}
       edition={edition}
       stale={!edition.sample && edition.date !== new Date().toISOString().slice(0, 10)}
     />

@@ -23,5 +23,5 @@ export default async function EditionPage({ params }: Props) {
   if (!validDate(date)) notFound();
   const edition = await getEdition(date);
   if (!edition) notFound();
-  return <Briefing edition={edition} archive />;
+  return <Briefing key={edition.id} edition={edition} archive />;
 }

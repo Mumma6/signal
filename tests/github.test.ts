@@ -12,7 +12,7 @@ const repo = (name: string, patch: Partial<GitHubRepo> = {}): GitHubRepo => ({
   full_name: name,
   html_url: `https://github.com/${name}`,
   description: "An open inference framework with a developer SDK and evaluation tools.",
-  stargazers_count: 0,
+  stargazers_count: 1500,
   language: "Python",
   created_at: "2026-11-10T00:00:00Z",
   pushed_at: "2026-11-15T00:00:00Z",
@@ -27,17 +27,18 @@ const repo = (name: string, patch: Partial<GitHubRepo> = {}): GitHubRepo => ({
   license: { spdx_id: "MIT" },
   ...patch,
 });
-describe("fresh GitHub discovery", () => {
-  it("uses rolling dates, topic relevance and activity rather than star sorting", () => {
+describe("popular and active GitHub discovery", () => {
+  it("requires popularity and recent activity without excluding established projects", () => {
     const url = new URL(radarSearchUrl("llm", now));
-    expect(url.searchParams.get("q")).toContain("created:>=2026-08-18");
+    expect(url.searchParams.get("q")).not.toContain("created:");
     expect(url.searchParams.get("q")).toContain("pushed:>=2026-11-02");
     expect(url.searchParams.get("sort")).toBe("updated");
-    expect(url.searchParams.get("q")).not.toContain("stars:");
+    expect(url.searchParams.get("q")).toContain("stars:>=1000");
   });
-  it("rejects old, stale, unlicensed, archived, forked and persona-only repositories", () => {
+  it("rejects unpopular, stale, unlicensed, archived, forked and persona-only repositories", () => {
     for (const patch of [
-      { created_at: "2024-01-01T00:00:00Z" },
+      { stargazers_count: 999 },
+      { stargazers_count: 0 },
       { pushed_at: "2026-10-01T00:00:00Z" },
       { license: null },
       { archived: true },
@@ -47,14 +48,20 @@ describe("fresh GitHub discovery", () => {
     ])
       expect(eligibleRepository(repo("a/tool", patch), now)).toBe(false);
     expect(eligibleRepository(repo("a/tool"), now)).toBe(true);
+    expect(
+      eligibleRepository(
+        repo("a/tool", { created_at: "2024-01-01T00:00:00Z", stargazers_count: 1000 }),
+        now,
+      ),
+    ).toBe(true);
   });
-  it("keeps popularity out of placement and diversifies owners", () => {
+  it("orders popular projects by activity and diversifies owners", () => {
     const candidates = [
       {
-        repo: repo("a/old", { stargazers_count: 100000, created_at: "2026-09-01T00:00:00Z" }),
+        repo: repo("a/old", { stargazers_count: 100000, pushed_at: "2026-11-14T00:00:00Z" }),
         topic: "llm",
       },
-      { repo: repo("b/new", { created_at: "2026-11-15T00:00:00Z" }), topic: "llm" },
+      { repo: repo("b/new", { pushed_at: "2026-11-15T00:00:00Z" }), topic: "llm" },
       { repo: repo("b/other"), topic: "ai-agents" },
     ];
     const selected = selectRepositories(candidates, now);
