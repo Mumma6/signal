@@ -52,9 +52,11 @@ Refresh the homepage. Subsequent invocations for that UTC date return `already-p
 | `DATABASE_URL_UNPOOLED` | Direct PostgreSQL URL for explicit migrations               | Migrations                  |
 | `CRON_SECRET`           | At least 32 random characters; protects both cron endpoints | HTTP generation             |
 | `GITHUB_TOKEN`          | Optional read-only token to raise public GitHub API quotas  | Optional                    |
+| `FLOWMARK_API_KEY`      | Server write key for briefing telemetry. Set it yourself    | Optional                    |
+| `FLOWMARK_API_URL`      | Flowmark API origin, `https://api.flowmark.dev`             | With the write key          |
 | `NEXT_PUBLIC_SITE_URL`  | Canonical origin, such as `https://signal.example`          | Production metadata and RSS |
 
-Never expose database, GitHub, or cron credentials with `NEXT_PUBLIC_`. The local generation command loads `.env.local` and invokes the same pipeline directly; it doesn't bypass authentication on the HTTP route. There are no inference charges; hosting, database, and optional domain costs depend on your own plans and usage.
+Never expose database, GitHub, cron, or Flowmark credentials with `NEXT_PUBLIC_`. The local generation command loads `.env.local` and invokes the same pipeline directly; it doesn't bypass authentication on the HTTP route. There are no inference charges; hosting, database, and optional domain costs depend on your own plans and usage.
 
 ## Commands
 

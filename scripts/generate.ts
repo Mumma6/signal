@@ -11,9 +11,17 @@ async function main() {
   }
   throw new Error("Briefing still pending; run the command again to resume.");
 }
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error instanceof Error ? error.message : "Generation failed");
-    process.exit(1);
-  });
+let failed = false;
+try {
+  await main();
+} catch (error) {
+  failed = true;
+  console.error(error instanceof Error ? error.message : "Generation failed");
+}
+try {
+  const { drainBriefingTelemetry } = await import("../src/lib/flowmark");
+  await drainBriefingTelemetry();
+} catch {
+  console.error("[Flowmark] Workflow delivery failed; application changes are unaffected.");
+}
+process.exit(failed ? 1 : 0);

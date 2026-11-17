@@ -13,6 +13,8 @@ import {
 // older checkpoints. Database JSON is an external boundary, not a type assertion.
 export const checkpointSchema = z.object({
   collectedAt: z.iso.datetime().optional(),
+  // Continues one briefing execution across pending invocations. Not the edition date.
+  executionId: z.uuid().optional(),
   phase: z.enum(["evaluate", "summarize", "publish"]),
   articles: z.array(articleSchema),
   selected: z.array(articleSchema.extend({ category: categorySchema })),
