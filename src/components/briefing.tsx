@@ -156,10 +156,18 @@ export function Briefing({
           <article className="reader-story">
             <div className="mb-6 flex items-center gap-3">
               <Badge className="border-signal/20 bg-signal/7 text-signal">{story.category}</Badge>
-              <span className="text-[11px] text-muted-foreground">{story.sourceName}</span>
+              <span className="text-xs text-muted-foreground">{story.sourceName}</span>
             </div>
             <h2 ref={titleRef} tabIndex={-1} className="reader-title outline-none">
-              {story.title}
+              <a
+                href={story.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="reader-title-link"
+              >
+                {story.title}
+                <ArrowUpRight className="reader-title-arrow" aria-hidden="true" />
+              </a>
             </h2>
             <span className="eyebrow mt-7 block text-muted-foreground">
               {story.summaryKind === "source-excerpt" ? "FROM THE SOURCE" : "THE SHORT VERSION"}

@@ -901,8 +901,11 @@ summary::-webkit-details-marker {
 }
 .reader-story {
   padding: 32px;
-  background: linear-gradient(135deg, #11141d, #101116);
-  border: 1px solid var(--border);
+  background: linear-gradient(145deg, #1d2435, #171b26 65%);
+  border: 1px solid #a4b9ff38;
+  box-shadow:
+    0 12px 36px #00000026,
+    inset 0 1px 0 #ffffff08;
   border-top: 0;
   border-radius: 0 0 8px 8px;
 }
@@ -910,14 +913,15 @@ summary::-webkit-details-marker {
   font-size: clamp(25px, 2.6vw, 35px);
   line-height: 1.2;
   letter-spacing: -0.035em;
-  font-weight: 450;
+  font-weight: 550;
   text-wrap: pretty;
 }
 .reader-summary {
   margin-top: 12px;
-  font-size: 15px;
+  max-width: 65ch;
+  font-size: 17px;
   line-height: 1.85;
-  color: #b5bac6;
+  color: #d3d9e6;
 }
 .reader-navigation {
   display: flex;
@@ -944,9 +948,9 @@ summary::-webkit-details-marker {
   gap: 12px;
   text-align: left;
   padding: 15px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.65;
-  color: #8f95a4;
+  color: #b6bece;
   transition:
     background 0.2s,
     color 0.2s;
@@ -957,8 +961,8 @@ summary::-webkit-details-marker {
 }
 .reader-contents-button.active {
   color: #e1e6f1;
-  background: #a4b9ff0b;
-  box-shadow: inset 2px 0 #a4b9ff;
+  background: #a4b9ff18;
+  box-shadow: inset 3px 0 #a4b9ff;
 }
 .reader-contents-button:focus-visible {
   outline: 2px solid #a4b9ff;
@@ -992,7 +996,7 @@ summary::-webkit-details-marker {
     padding: 24px 20px;
   }
   .reader-summary {
-    font-size: 14px;
+    font-size: 16px;
   }
   .reader-title {
     font-size: 27px;
@@ -1005,4 +1009,72 @@ summary::-webkit-details-marker {
     font-size: 12px;
     padding-inline: 12px;
   }
+}
+
+.reader-title-link {
+  color: #f5f7ff;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+  transition:
+    color 0.2s,
+    text-decoration-color 0.2s;
+}
+.reader-title-link:hover {
+  color: #c2d0ff;
+  text-decoration-color: #a4b9ff80;
+}
+.reader-title-link:focus-visible {
+  outline: 2px solid #a4b9ff;
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+.reader-title-arrow {
+  display: inline;
+  width: 0.65em;
+  height: 0.65em;
+  margin-left: 0.3em;
+  color: #a4b9ff;
+  vertical-align: baseline;
+}
+.reader-story .lead-perspective {
+  background: #a4b9ff0a;
+  border-left-color: #a4b9ff;
+  padding: 19px 20px;
+}
+.reader-story .lead-perspective p {
+  color: #bdc6d8;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.reader-story .eyebrow {
+  font-size: 10px;
+}
+.reader-story .source-link {
+  color: #c5cddd;
+}
+.radar-card,
+.radar-mini {
+  background: linear-gradient(145deg, #1a2030, #141820);
+  border: 1px solid #a4b9ff26;
+  box-shadow: 0 8px 24px #0000001a;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.radar-card:hover,
+.radar-mini:hover {
+  border-color: #a4b9ff60;
+}
+.radar-mini {
+  border-radius: 8px;
+  padding: 18px;
+  margin-top: 12px;
+}
+.radar-card > p:first-of-type,
+.radar-mini > p:first-of-type {
+  color: #c4ccdc;
+  font-size: 14px;
+  line-height: 1.75;
 }
