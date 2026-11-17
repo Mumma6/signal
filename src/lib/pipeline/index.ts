@@ -1,5 +1,6 @@
+import "server-only";
 import { utcDate } from "@/lib/dates";
-import { createEditor } from "./editor";
+import { createEditor } from "@/lib/editorial/editor";
 import { createStore } from "@/lib/db/briefing-store";
 import { runPipeline } from "./run";
 import { collectArticles } from "@/lib/sources/collect";

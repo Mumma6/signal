@@ -1,5 +1,5 @@
 import { Briefing } from "@/components/briefing";
-import { getLatestEdition } from "@/lib/editions";
+import { getLatestEdition, toBriefingView } from "@/lib/editions";
 import { EmptyState } from "@/components/empty-state";
 export const dynamic = "force-dynamic";
 export default async function Home() {
@@ -7,7 +7,7 @@ export default async function Home() {
   return edition ? (
     <Briefing
       key={edition.id}
-      edition={edition}
+      edition={toBriefingView(edition)}
       stale={!edition.sample && edition.date !== new Date().toISOString().slice(0, 10)}
     />
   ) : (

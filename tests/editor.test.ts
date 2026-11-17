@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { selectArticles } from "@/lib/editorial/selection";
-import { summarySchema, validateEvaluations, validateGrounding } from "@/lib/editorial/excerpts";
+import { summarySchema, validateEvaluations, validateGrounding } from "@/lib/editorial/editor";
 import { article, editor, story } from "./fixtures";
 import { checkpoint } from "./fixtures";
 import { isPartial } from "@/lib/editorial/copy";

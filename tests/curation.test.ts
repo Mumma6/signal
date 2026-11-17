@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createEditor } from "@/lib/pipeline/editor";
+import { createEditor } from "@/lib/editorial/editor";
 import { evaluateArticles, sameDevelopment, scoreArticle } from "@/lib/editorial/curation";
 import { discoverThemes } from "@/lib/editorial/themes";
 import { balanceCandidates } from "@/lib/editorial/balance";

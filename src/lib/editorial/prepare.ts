@@ -1,3 +1,4 @@
+import "server-only";
 import type { NewsCollection, Outcomes } from "@/lib/types";
 import type { PublishedArticle } from "./types";
 import { deduplicate, unpublishedArticles } from "./novelty";

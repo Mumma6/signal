@@ -1,3 +1,4 @@
+import "server-only";
 import type { Edition } from "./types";
 export function escapeXml(text: string) {
   return text.replace(

@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { authorizedCron } from "@/lib/cron";
-import { observe } from "@/lib/observability";
 import { editionFeed } from "@/lib/feed";
 import { sampleEdition } from "@/lib/sample";
 describe("security and isolation", () => {
@@ -11,53 +10,6 @@ describe("security and isolation", () => {
     expect(authorizedCron("Bearer short", "short")).toBe(false);
     expect(authorizedCron(`Bearer ${"b".repeat(64)}`, secret)).toBe(false);
     expect(authorizedCron(`Bearer ${secret}`, secret)).toBe(true);
-  });
-  it("telemetry failures never affect successful business work", async () => {
-    expect(
-      await observe(
-        "test",
-        async () => 42,
-        () => ({ selected: 0 }),
-        () => {
-          throw new Error("sink down");
-        },
-      ),
-    ).toBe(42);
-  });
-  it("preserves original application errors when telemetry also fails", async () => {
-    await expect(
-      observe(
-        "test",
-        async () => {
-          throw new Error("original");
-        },
-        undefined,
-        () => {
-          throw new Error("sink down");
-        },
-      ),
-    ).rejects.toThrow("original");
-  });
-  it("isolates asynchronous sink failures and outcome serialization errors", async () => {
-    expect(
-      await observe(
-        "test",
-        async () => 42,
-        undefined,
-        async () => {
-          throw new Error("offline");
-        },
-      ),
-    ).toBe(42);
-    expect(
-      await observe(
-        "test",
-        async () => 42,
-        () => {
-          throw new Error("bad metrics");
-        },
-      ),
-    ).toBe(42);
   });
   it("escapes untrusted source text in RSS and labels historical examples", () => {
     const edition = structuredClone(sampleEdition);

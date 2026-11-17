@@ -1,12 +1,8 @@
-import type { Article, Category, Story, Outcomes } from "@/lib/types";
-import type { Evaluation } from "@/lib/editorial/types";
+import type { Article, Outcomes } from "@/lib/types";
+
 import type { z } from "zod";
 import type { checkpointSchema } from "./checkpoint";
 export type Checkpoint = z.infer<typeof checkpointSchema>;
-export interface Editor {
-  evaluate(articles: Article[]): Promise<Evaluation[]>;
-  summarize(article: Article & { category: Category }): Promise<Story>;
-}
 export interface PipelineStore {
   recentArticles(date: string): Promise<Pick<Article, "id" | "url" | "title" | "sourceId">[]>;
   claim(

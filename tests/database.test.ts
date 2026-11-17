@@ -12,7 +12,7 @@ import type { getDb } from "@/lib/db";
 import { article, checkpoint, story } from "./fixtures";
 import { reviseToday } from "@/lib/db/revise";
 import { runPipeline } from "@/lib/pipeline/run";
-import { createEditor } from "@/lib/pipeline/editor";
+import { createEditor } from "@/lib/editorial/editor";
 
 describe("PostgreSQL publication contract", () => {
   const pg = new PGlite();

@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { editionIndexSchema } from "@/lib/presentation";
+import { describe, expect, it } from "vitest";
 import { prepareCandidates } from "@/lib/editorial/prepare";
 import { selectArticles } from "@/lib/editorial/selection";
 import { evaluateArticles } from "@/lib/editorial/curation";
@@ -9,7 +10,7 @@ import {
   recheckHistory,
 } from "@/lib/pipeline/progress";
 import { checkpointSchema } from "@/lib/pipeline/checkpoint";
-import { editionSchema, editionIndexSchema, newsCollectionSchema } from "@/lib/schemas";
+import { editionSchema, newsCollectionSchema } from "@/lib/schemas";
 import { runPipeline } from "@/lib/pipeline/run";
 import { article, checkpoint, editor, memoryStore, story } from "./fixtures";
 import { sampleEdition, historicalEdition } from "@/lib/sample";
@@ -93,25 +94,13 @@ describe("domain and persistence boundaries", () => {
     memory.store.release = async () => {
       throw new Error("Cleanup failure");
     };
-    const log = vi.spyOn(console, "info").mockImplementation(() => {});
-    try {
-      await expect(
-        runPipeline("2026-11-17", {
-          store: memory.store,
-          editor,
-          collect: async () => ({ articles: [article()], reports: [] }),
-          radar: async () => ({ repositories: [], unavailable: 0, releaseFailures: 0 }),
-        }),
-      ).rejects.toBe(original);
-      expect(
-        log.mock.calls.some(
-          ([event]) =>
-            JSON.parse(event).process === "briefing.release" &&
-            JSON.parse(event).execution === "failure",
-        ),
-      ).toBe(true);
-    } finally {
-      log.mockRestore();
-    }
+    await expect(
+      runPipeline("2026-11-17", {
+        store: memory.store,
+        editor,
+        collect: async () => ({ articles: [article()], reports: [] }),
+        radar: async () => ({ repositories: [], unavailable: 0, releaseFailures: 0 }),
+      }),
+    ).rejects.toBe(original);
   });
 });

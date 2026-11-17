@@ -1,9 +1,10 @@
+import "server-only";
 import { validDate } from "@/lib/dates";
 import { randomUUID } from "node:crypto";
 import type { NewsCollection, RepositoryCollection } from "@/lib/types";
-import type { Editor, PipelineStore, PipelineResult } from "./types";
-import { validateEvaluations } from "@/lib/editorial/excerpts";
-import { observe } from "@/lib/observability";
+import type { PipelineStore, PipelineResult } from "./types";
+import type { Editor } from "@/lib/editorial/types";
+import { validateEvaluations } from "@/lib/editorial/editor";
 import { isPartial } from "@/lib/editorial/copy";
 import { prepareCandidates } from "@/lib/editorial/prepare";
 import {
@@ -51,25 +52,7 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
       if (collection.status === "rejected" || collection.value.articles.length === 0)
         throw new Error("No usable source material; edition not published");
       const { reports } = collection.value;
-      const prepared = await observe(
-        "article.processing",
-        async () => prepareCandidates(collection.value, history),
-        (result) => ({ collected: result.counts.collected, duplicates: result.counts.duplicates }),
-      );
-      await observe(
-        "article.novelty",
-        async () => prepared,
-        (result) => ({
-          previouslyPublished: result.counts.previouslyPublished,
-          fresh:
-            result.counts.collected - result.counts.duplicates - result.counts.previouslyPublished,
-        }),
-      );
-      await observe(
-        "article.themes",
-        async () => prepared.themes,
-        (result) => ({ themes: result.length }),
-      );
+      const prepared = prepareCandidates(collection.value, history);
       cp = {
         collectedAt: new Date(now()).toISOString(),
         phase: "evaluate",
@@ -119,16 +102,7 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
       cp = readyToPublish(cp);
       await store.save(date, runId, cp);
     }
-    const publication = cp;
-    await observe(
-      "briefing.publication",
-      () => store.publish(date, runId, publication),
-      () => ({
-        briefingsPublished: 1,
-        articlesSelected: publication.stories.length,
-        partial: isPartial(publication),
-      }),
-    );
+    await store.publish(date, runId, cp);
     return {
       status: "published",
       date,
@@ -138,15 +112,13 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
   } catch (error) {
     // Avoid persisting provider messages, which can contain credentials or source text.
     try {
-      await observe("briefing.release", () =>
-        store.release(
-          date,
-          runId,
-          "Generation failed. Inspect structured process logs and retry the same date.",
-        ),
+      await store.release(
+        date,
+        runId,
+        "Generation failed. Retry the same date to resume saved progress.",
       );
     } catch {
-      // The release failure is recorded separately; preserve the processing error.
+      // Preserve the processing error; cleanup cannot replace it.
       // A lease that could not be released remains recoverable through expiry.
     }
     throw error;

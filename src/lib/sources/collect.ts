@@ -1,9 +1,9 @@
+import "server-only";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { z } from "zod";
 import type { Article, CollectionReport } from "@/lib/types";
 import { fetchText } from "./http";
 import { normalizeArticle } from "./normalize";
-import { observe } from "@/lib/observability";
 import { mapSettled } from "@/lib/concurrency";
 import { sourceDefinitions, type SourceDefinition } from "./registry";
 import { parseAnthropic, parseXaiNotes, type RawArticle } from "./pages";
@@ -89,35 +89,25 @@ export async function collectArticles(
   read: typeof fetchText = fetchText,
   definitions: readonly SourceDefinition[] = sourceDefinitions,
 ) {
-  const results = await mapSettled(definitions, 4, (source) =>
-    observe(
-      "source.collection",
-      async () => {
-        const raw = parseSource(await read(source.url), source);
-        const articles = raw
-          .map((item) => normalizeArticle(item, source, now))
-          .filter((item): item is Article => item !== null);
-        const contextArticles = raw
-          .map((item) => normalizeArticle(item, source, now, 168))
-          .filter((item): item is Article => item !== null);
-        return {
-          articles,
-          contextArticles,
-          report: {
-            source: source.id,
-            count: articles.length,
-            invalid: raw.length - articles.length,
-            status: "ok" as const,
-          },
-        };
-      },
-      (result) => ({
+  const results = await mapSettled(definitions, 4, async (source) => {
+    const raw = parseSource(await read(source.url), source);
+    const articles = raw
+      .map((item) => normalizeArticle(item, source, now))
+      .filter((item): item is Article => item !== null);
+    const contextArticles = raw
+      .map((item) => normalizeArticle(item, source, now, 168))
+      .filter((item): item is Article => item !== null);
+    return {
+      articles,
+      contextArticles,
+      report: {
         source: source.id,
-        collected: result.articles.length,
-        rejected: result.report.invalid,
-      }),
-    ),
-  );
+        count: articles.length,
+        invalid: raw.length - articles.length,
+        status: "ok" as const,
+      },
+    };
+  });
   const articles: Article[] = [];
   const contextArticles: Article[] = [];
   const reports: CollectionReport[] = [];

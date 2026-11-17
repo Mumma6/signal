@@ -1,3 +1,4 @@
+import "server-only";
 import { load } from "cheerio";
 
 export type RawArticle = { title: unknown; url: unknown; content: unknown; publishedAt: unknown };

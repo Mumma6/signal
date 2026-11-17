@@ -1,5 +1,6 @@
 import type { Article, Story, Outcomes } from "@/lib/types";
-import type { Checkpoint, Editor, PipelineStore } from "@/lib/pipeline/types";
+import type { Checkpoint, PipelineStore } from "@/lib/pipeline/types";
+import type { Editor } from "@/lib/editorial/types";
 export const article = (id = "a", override: Partial<Article> = {}): Article => ({
   id,
   sourceId: "openai",

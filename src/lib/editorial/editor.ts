@@ -1,8 +1,10 @@
+import "server-only";
 import { categorySchema } from "@/lib/schemas";
 import { z } from "zod";
 import type { Article, Story } from "@/lib/types";
 import type { Evaluation, SelectedArticle } from "./types";
-import { selectionContext, sourceExcerpt } from "./curation";
+import type { Editor } from "@/lib/editorial/types";
+import { evaluateArticles, selectionContext, sourceExcerpt } from "./curation";
 export const summarySchema = z.object({
   summary: z.string().min(60).max(550),
   whyItMatters: z.string().min(30).max(350),
@@ -74,5 +76,12 @@ export function extractStory(article: SelectedArticle): Story {
     category: article.category,
     ...draft,
     summaryKind: "source-excerpt",
+  };
+}
+
+export function createEditor(): Editor {
+  return {
+    evaluate: async (articles) => validateEvaluations(articles, evaluateArticles(articles)),
+    summarize: async (article) => extractStory(article),
   };
 }

@@ -11,16 +11,16 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "briefing:generate": "tsx scripts/generate.ts",
+    "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "node --conditions=react-server --import tsx scripts/migrate.ts",
+    "briefing:generate": "node --conditions=react-server --import tsx scripts/generate.ts",
     "check": "npm run typecheck && npm run lint && npm test",
-    "sources:check": "tsx scripts/check-sources.ts",
+    "sources:check": "node --conditions=react-server --import tsx scripts/check-sources.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview:refresh": "tsx scripts/preview.ts",
-    "radar:refresh": "tsx scripts/refresh-radar.ts",
-    "briefing:revise": "tsx scripts/revise-briefing.ts"
+    "preview:refresh": "node --conditions=react-server --import tsx scripts/preview.ts",
+    "radar:refresh": "node --conditions=react-server --import tsx scripts/refresh-radar.ts",
+    "briefing:revise": "node --conditions=react-server --import tsx scripts/revise-briefing.ts"
   },
   "engines": {
     "node": ">=22.12.0"
@@ -42,6 +42,7 @@
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },

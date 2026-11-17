@@ -1,3 +1,4 @@
+import "server-only";
 // A small worker pool keeps upstream requests bounded while preserving input order and failures.
 export async function mapSettled<T, R>(
   items: readonly T[],

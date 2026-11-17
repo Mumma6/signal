@@ -7,7 +7,7 @@ import { newsCollectionSchema } from "../src/lib/schemas";
 import { getDb } from "../src/lib/db";
 import { briefings, briefingArticles } from "../src/lib/db/schema";
 import { createStore } from "../src/lib/db/briefing-store";
-import { createEditor } from "../src/lib/pipeline/editor";
+import { createEditor } from "../src/lib/editorial/editor";
 import { selectArticles } from "../src/lib/editorial/selection";
 import { reviseToday } from "../src/lib/db/revise";
 import type { Checkpoint } from "../src/lib/pipeline/types";

@@ -1,3 +1,4 @@
+import "server-only";
 import type { Article, Category } from "@/lib/types";
 import type { Evaluation } from "./types";
 import { publisherFor } from "@/lib/sources/registry";

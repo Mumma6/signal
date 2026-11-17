@@ -1,3 +1,4 @@
+import "server-only";
 import type { Article } from "@/lib/types";
 import { canonicalUrl } from "@/lib/urls";
 import { sameDevelopment } from "./curation";

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getEdition } from "@/lib/editions";
+import { getEdition, toBriefingView } from "@/lib/editions";
 import { validDate } from "@/lib/dates";
 import { Briefing } from "@/components/briefing";
 import { formatDate } from "@/lib/utils";
@@ -23,5 +23,5 @@ export default async function EditionPage({ params }: Props) {
   if (!validDate(date)) notFound();
   const edition = await getEdition(date);
   if (!edition) notFound();
-  return <Briefing key={edition.id} edition={edition} archive />;
+  return <Briefing key={edition.id} edition={toBriefingView(edition)} archive />;
 }

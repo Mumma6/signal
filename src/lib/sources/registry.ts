@@ -1,3 +1,4 @@
+import "server-only";
 export type SourceDefinition = {
   id: string;
   name: string;

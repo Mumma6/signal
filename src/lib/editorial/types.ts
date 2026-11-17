@@ -1,4 +1,4 @@
-import type { Article, Category } from "@/lib/types";
+import type { Article, Category, Story } from "@/lib/types";
 export type Evaluation = {
   id: string;
   score: number;
@@ -8,3 +8,8 @@ export type Evaluation = {
 };
 export type SelectedArticle = Article & { category: Category };
 export type PublishedArticle = Pick<Article, "id" | "url" | "title" | "sourceId">;
+
+export interface Editor {
+  evaluate(articles: Article[]): Promise<Evaluation[]>;
+  summarize(article: Article & { category: Category }): Promise<Story>;
+}

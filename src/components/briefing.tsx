@@ -10,7 +10,8 @@ import {
   GitFork as Github,
   Radio,
 } from "lucide-react";
-import type { Edition, Story } from "@/lib/types";
+import type { BriefingView } from "@/lib/presentation";
+import type { Story } from "@/lib/types";
 import { cn, formatDate, readingMinutes } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -37,7 +38,7 @@ export function Briefing({
   archive = false,
   stale = false,
 }: {
-  edition: Edition;
+  edition: BriefingView;
   archive?: boolean;
   stale?: boolean;
 }) {

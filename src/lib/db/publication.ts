@@ -1,3 +1,4 @@
+import "server-only";
 import { and, eq } from "drizzle-orm";
 import { articles, sources, briefings, briefingArticles } from "./schema";
 import { sourceDefinitions } from "@/lib/sources/registry";

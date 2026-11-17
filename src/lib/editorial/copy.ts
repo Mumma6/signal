@@ -1,3 +1,4 @@
+import "server-only";
 import type { Story, Outcomes } from "@/lib/types";
 
 export function isPartial(cp: {

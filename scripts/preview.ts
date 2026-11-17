@@ -4,7 +4,7 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { collectArticles } from "../src/lib/sources/collect";
 import { collectRepositories } from "../src/lib/sources/github";
-import { createEditor } from "../src/lib/pipeline/editor";
+import { createEditor } from "../src/lib/editorial/editor";
 import { selectArticles } from "../src/lib/editorial/selection";
 import { editionCopy } from "../src/lib/editorial/copy";
 import type { Edition } from "../src/lib/types";

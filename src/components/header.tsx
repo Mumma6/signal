@@ -1,6 +1,6 @@
 "use client";
 import type { EditionIndexItem } from "@/lib/types";
-import { editionIndexSchema } from "@/lib/schemas";
+import { editionIndexSchema } from "@/lib/presentation";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";

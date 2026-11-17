@@ -1,3 +1,4 @@
+import "server-only";
 import { z } from "zod";
 export const categories = [
   "Models",
@@ -93,13 +94,4 @@ export const editionSchema = z.object({
   sampleKind: z.enum(["historical", "source-snapshot"]).optional(),
   publishedAt: z.iso.datetime(),
   themes: z.array(themeSchema).optional(),
-});
-export const editionIndexSchema = z.object({
-  id: z.string(),
-  date: z.string(),
-  title: z.string(),
-  description: z.string(),
-  count,
-  sample: z.boolean(),
-  sampleKind: z.enum(["historical", "source-snapshot"]).optional(),
 });

@@ -1,3 +1,4 @@
+import "server-only";
 import { and, eq, lt, gte, sql } from "drizzle-orm";
 import { checkpointSchema } from "@/lib/pipeline/checkpoint";
 import { getDb } from "@/lib/db";

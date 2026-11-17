@@ -1,3 +1,4 @@
+import "server-only";
 import { categorySchema } from "@/lib/schemas";
 import { editionSchema } from "@/lib/schemas";
 import { and, desc, eq } from "drizzle-orm";

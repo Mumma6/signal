@@ -1,3 +1,4 @@
+import "server-only";
 import type { Article, Category } from "@/lib/types";
 import type { Evaluation } from "@/lib/editorial/types";
 import { sourceDefinitions } from "@/lib/sources/registry";

@@ -1,7 +1,7 @@
+import "server-only";
 import { z } from "zod";
 import type { Repository } from "@/lib/types";
 import { fetchText, SourceHttpError } from "./http";
-import { observe } from "@/lib/observability";
 import { mapSettled } from "@/lib/concurrency";
 
 export const radarTopics = ["llm", "ai-agents", "machine-learning"] as const;
@@ -123,79 +123,60 @@ export async function collectRepositories(now = new Date(), read: typeof fetchTe
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   // Three sequential searches stay comfortably inside the separate search quota.
-  const searches = await mapSettled(radarTopics, 1, (topic) =>
-    observe(
-      "github.discovery",
-      async () => {
-        const result = searchSchema.parse(
-          JSON.parse(await read(radarSearchUrl(topic, now), headers)),
-        );
-        return {
-          incomplete: result.incomplete_results,
-          candidates: result.items.flatMap((item) => {
-            const parsed = githubRepoSchema.safeParse(item);
-            return parsed.success ? [{ repo: parsed.data, topic }] : [];
-          }),
-        };
-      },
-      (result) => ({ topic, discovered: result.candidates.length, incomplete: result.incomplete }),
-    ),
-  );
+  const searches = await mapSettled(radarTopics, 1, async (topic) => {
+    const result = searchSchema.parse(JSON.parse(await read(radarSearchUrl(topic, now), headers)));
+    return {
+      incomplete: result.incomplete_results,
+      candidates: result.items.flatMap((item) => {
+        const parsed = githubRepoSchema.safeParse(item);
+        return parsed.success ? [{ repo: parsed.data, topic }] : [];
+      }),
+    };
+  });
   const candidates = searches.flatMap((result) =>
     result.status === "fulfilled" ? result.value.candidates : [],
   );
   const selected = selectRepositories(candidates, now);
 
-  const releases = await mapSettled(selected, 3, ({ repo, topic }) =>
-    observe(
-      "github.release_collection",
-      async () => {
-        let release: z.infer<typeof releaseSchema> | null = null;
-        let releaseUnavailable = false;
-        try {
-          const result = releaseSchema.parse(
-            JSON.parse(
-              await read(`https://api.github.com/repos/${repo.full_name}/releases/latest`, headers),
-            ),
-          );
-          if (
-            result.draft ||
-            result.prerelease ||
-            !result.html_url.startsWith(`https://github.com/${repo.full_name}/releases/`)
-          )
-            throw new Error("Invalid stable release");
-          release = result;
-        } catch (error) {
-          if (!(error instanceof SourceHttpError && error.status === 404))
-            releaseUnavailable = true;
-        }
-        return {
-          releaseUnavailable,
-          repository: {
-            name: repo.full_name,
-            description: repo.description,
-            url: repo.html_url,
-            stars: repo.stargazers_count,
-            language: repo.language,
-            pushedAt: repo.pushed_at,
-            createdAt: repo.created_at,
-            license: repo.license.spdx_id,
-            discoveryTopic: topic,
-            release: release?.tag_name ?? null,
-            releaseUrl: release?.html_url ?? null,
-            releasePublishedAt: release?.published_at ?? null,
-            reason: `Popular in ${topic}: at least 1,000 stars, pushed within 14 days, with a declared ${repo.license.spdx_id} license.`,
-            collectedAt: now.toISOString(),
-          } satisfies Repository,
-        };
-      },
-      (result) => ({
-        repository: result.repository.name,
-        releaseAvailable: result.repository.release !== null,
-        releaseUnavailable: result.releaseUnavailable,
-      }),
-    ),
-  );
+  const releases = await mapSettled(selected, 3, async ({ repo, topic }) => {
+    let release: z.infer<typeof releaseSchema> | null = null;
+    let releaseUnavailable = false;
+    try {
+      const result = releaseSchema.parse(
+        JSON.parse(
+          await read(`https://api.github.com/repos/${repo.full_name}/releases/latest`, headers),
+        ),
+      );
+      if (
+        result.draft ||
+        result.prerelease ||
+        !result.html_url.startsWith(`https://github.com/${repo.full_name}/releases/`)
+      )
+        throw new Error("Invalid stable release");
+      release = result;
+    } catch (error) {
+      if (!(error instanceof SourceHttpError && error.status === 404)) releaseUnavailable = true;
+    }
+    return {
+      releaseUnavailable,
+      repository: {
+        name: repo.full_name,
+        description: repo.description,
+        url: repo.html_url,
+        stars: repo.stargazers_count,
+        language: repo.language,
+        pushedAt: repo.pushed_at,
+        createdAt: repo.created_at,
+        license: repo.license.spdx_id,
+        discoveryTopic: topic,
+        release: release?.tag_name ?? null,
+        releaseUrl: release?.html_url ?? null,
+        releasePublishedAt: release?.published_at ?? null,
+        reason: `Popular in ${topic}: at least 1,000 stars, pushed within 14 days, with a declared ${repo.license.spdx_id} license.`,
+        collectedAt: now.toISOString(),
+      } satisfies Repository,
+    };
+  });
   return {
     repositories: releases.flatMap((result) =>
       result.status === "fulfilled" ? [result.value.repository] : [],

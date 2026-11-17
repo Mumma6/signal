@@ -1,3 +1,4 @@
+import "server-only";
 import { cache } from "react";
 import { createEditionReader } from "./db/edition-reader";
 import { sampleEdition } from "./sample";
@@ -28,3 +29,15 @@ export const listEditions = cache(async (): Promise<EditionIndexItem[]> => {
     ];
   return createEditionReader().list();
 });
+
+export function toBriefingView(edition: Edition): import("./presentation").BriefingView {
+  return {
+    date: edition.date,
+    stories: edition.stories,
+    repositories: edition.repositories,
+    themes: edition.themes,
+    sample: edition.sample,
+    sampleKind: edition.sampleKind,
+    partial: edition.partial,
+  };
+}

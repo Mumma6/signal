@@ -149,12 +149,20 @@ src/lib/sources/        Fixed-endpoint collectors and deterministic normalizatio
 src/lib/editorial/      Pure curation, selection, excerpts, novelty and shared candidate preparation
 src/lib/pipeline/       Bounded orchestration, immutable progress transitions and checkpoint contract
 src/lib/db/             Drizzle schema, pool, read models, leases and atomic publication
-src/lib/observability.ts Structured process events; no vendor dependency
 drizzle/                Versioned migrations and Drizzle snapshots
-src/lib/schemas.ts     Runtime schemas for serialized models and external boundaries
+src/lib/schemas.ts     Server-only runtime schemas for domain and persistence boundaries
+src/lib/presentation.ts Client-safe reading and search contracts
 src/lib/types.ts       Inferred model types shared by server and UI
 scripts/                Manual generation, migrations, source diagnostics
 tests/                  Business logic and PostgreSQL contract tests
 ```
 
-Flowmark SDK integration is intentionally left to the project owner. The independent process events are documented in [observability](docs/observability.md).
+## Server and browser boundaries
+
+Collection, curation, excerpt extraction, generation, GitHub access, and PostgreSQL operations are marked with Next.js `server-only`. Importing these modules from a Client Component fails the build. No model provider is connected.
+
+Server Components call `editions.ts` directly. Reading pages serialize a `BriefingView` containing the stories, repository cards, source notes, edition date, and display flags. Generation reports, counters, and checkpoints stay on the server. The browser manages navigation, dialogs, filters, sharing, and the existing same-origin search request. `presentation.ts` is the small client-safe validation contract; domain schemas remain server-only.
+
+The npm maintenance commands set Node's `react-server` condition explicitly so the same protected modules can run in trusted local CLI processes. For a direct invocation, use `node --conditions=react-server --import tsx scripts/<command>.ts`. This condition is not a substitute for credentials or cron authorization. Vitest substitutes only the marker in its Node test environment; a dependency-graph test checks every Client Component, and the production build uses Next.js's real boundary enforcement.
+
+Business outcomes remain in saved editions and cron responses.

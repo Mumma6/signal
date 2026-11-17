@@ -1,3 +1,4 @@
+import "server-only";
 export class SourceHttpError extends Error {
   constructor(readonly status: number) {
     super(`Source returned HTTP ${status}`);

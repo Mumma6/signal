@@ -1,3 +1,4 @@
+import "server-only";
 import type { Article, Story } from "@/lib/types";
 import type { Evaluation, PublishedArticle, SelectedArticle } from "@/lib/editorial/types";
 import { unpublishedArticles } from "@/lib/editorial/novelty";

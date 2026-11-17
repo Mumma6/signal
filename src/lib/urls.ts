@@ -1,3 +1,4 @@
+import "server-only";
 export function canonicalUrl(input: string) {
   const url = new URL(input);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password)

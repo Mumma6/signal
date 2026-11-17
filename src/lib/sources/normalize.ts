@@ -1,3 +1,4 @@
+import "server-only";
 import { createHash } from "node:crypto";
 import { load } from "cheerio";
 import { type Article } from "@/lib/types";
