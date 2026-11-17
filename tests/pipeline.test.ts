@@ -139,3 +139,64 @@ describe("daily pipeline", () => {
     expect(validDate("2026-11-16")).toBe(true);
   });
 });
+
+describe("day-to-day novelty", () => {
+  it("filters yesterday before publisher quotas and reports rejected repeats", async () => {
+    const memory = memoryStore();
+    const old = article("old");
+    memory.store.recentArticles = async () => [old];
+    const result = await runPipeline("2026-11-17", {
+      store: memory.store,
+      editor,
+      collect: collection([
+        old,
+        article("fresh", {
+          title: "Microsoft releases neural image embeddings",
+          sourceId: "microsoft-research",
+        }),
+      ]),
+      radar,
+    });
+    expect(result.outcomes?.previouslyPublished).toBe(1);
+    expect(memory.published()?.stories.map((s) => s.id)).toEqual(["fresh"]);
+  });
+  it("returns a quiet-day outcome and recollects on a later retry", async () => {
+    const memory = memoryStore();
+    memory.store.recentArticles = async () => [article()];
+    const collect = collection();
+    const deps = { store: memory.store, editor, collect, radar };
+    expect((await runPipeline("2026-11-17", deps)).status).toBe("no-new-stories");
+    expect(memory.published()).toBeNull();
+    expect(memory.checkpoint()).toBeNull();
+    await runPipeline("2026-11-17", deps);
+    expect(collect).toHaveBeenCalledTimes(2);
+  });
+  it("rechecks a saved checkpoint against newly published history", async () => {
+    const memory = memoryStore();
+    const collect = collection();
+    await runPipeline("2026-11-17", {
+      store: memory.store,
+      editor,
+      collect,
+      radar,
+      budgetMs: 1000,
+    });
+    memory.store.recentArticles = async () => [article()];
+    expect(
+      (await runPipeline("2026-11-17", { store: memory.store, editor, collect, radar })).status,
+    ).toBe("no-new-stories");
+    expect(memory.published()).toBeNull();
+  });
+  it("fails closed if history cannot be read", async () => {
+    const memory = memoryStore();
+    memory.store.recentArticles = async () => {
+      throw new Error("database unavailable");
+    };
+    const collect = collection();
+    await expect(
+      runPipeline("2026-11-17", { store: memory.store, editor, collect, radar }),
+    ).rejects.toThrow();
+    expect(collect).not.toHaveBeenCalled();
+    expect(memory.published()).toBeNull();
+  });
+});

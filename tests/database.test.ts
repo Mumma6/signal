@@ -8,7 +8,10 @@ import { sql } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
 import { createStore } from "@/lib/pipeline/store";
 import type { getDb } from "@/lib/db";
-import { checkpoint } from "./fixtures";
+import { article, checkpoint, story } from "./fixtures";
+import { reviseToday } from "@/lib/pipeline/revise";
+import { runPipeline } from "@/lib/pipeline/run";
+import { createEditor } from "@/lib/pipeline/editor";
 
 describe("PostgreSQL publication contract", () => {
   const pg = new PGlite();
@@ -30,6 +33,84 @@ describe("PostgreSQL publication contract", () => {
       store.claim("2026-11-16", randomUUID()),
     ]);
     expect(claims.map((c) => c.status).sort()).toEqual(["acquired", "busy"]);
+  });
+  it("does not repeat published stories across consecutive daily runs", async () => {
+    const old = article("old", { title: "OpenAI releases Orion model weights" });
+    const fresh = article("fresh", {
+      sourceId: "microsoft-research",
+      title: "Microsoft releases a neural inference SDK",
+    });
+    const deps = {
+      store,
+      editor: createEditor(),
+      radar: async () => ({ repositories: [], unavailable: 0, releaseFailures: 0 }),
+      collect: async () => ({ articles: [old], reports: [] }),
+    };
+    expect((await runPipeline("2026-11-16", deps)).status).toBe("published");
+    const result = await runPipeline("2026-11-17", {
+      ...deps,
+      collect: async () => ({ articles: [old, fresh], reports: [] }),
+    });
+    expect(result.status).toBe("published");
+    expect(result.outcomes?.previouslyPublished).toBe(1);
+    expect(
+      (await db.select().from(schema.briefingArticles)).map((r) => r.articleId).sort(),
+    ).toEqual(["fresh", "old"]);
+    expect(await store.recentArticles("2026-11-17")).toEqual([
+      { id: old.id, url: old.url, title: old.title, sourceId: old.sourceId },
+    ]);
+    expect(await store.recentArticles("2026-12-18")).toEqual([]);
+  });
+  it("revises today atomically while preserving the historical edition", async () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
+    for (const day of [yesterday, date]) {
+      const run = randomUUID();
+      await store.claim(day, run);
+      await store.publish(day, run, checkpoint());
+    }
+    const [current] = await db
+      .select()
+      .from(schema.briefings)
+      .where(sql`${schema.briefings.date}=${date}`);
+    const draft = checkpoint();
+    draft.articles = [article("corrected")];
+    draft.selected = [{ ...draft.articles[0], category: "Models" }];
+    draft.stories = [story("corrected")];
+    await reviseToday(date, current.publishedAt!, draft, db as unknown as ReturnType<typeof getDb>);
+    expect(
+      (await db.select().from(schema.briefingArticles)).map((r) => r.articleId).sort(),
+    ).toEqual(["a", "corrected"]);
+    expect((await db.select().from(schema.briefings)).every((b) => b.status === "published")).toBe(
+      true,
+    );
+    await expect(
+      reviseToday(
+        yesterday,
+        current.publishedAt!,
+        draft,
+        db as unknown as ReturnType<typeof getDb>,
+      ),
+    ).rejects.toThrow("Only today's");
+  });
+  it("restores the original stories if a revision fails or the review is stale", async () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const run = randomUUID();
+    await store.claim(date, run);
+    await store.publish(date, run, checkpoint());
+    const [current] = await db.select().from(schema.briefings);
+    const draft = checkpoint();
+    draft.articles = [];
+    await expect(
+      reviseToday(date, current.publishedAt!, draft, db as unknown as ReturnType<typeof getDb>),
+    ).rejects.toThrow();
+    expect((await db.select().from(schema.briefingArticles)).map((r) => r.articleId)).toEqual([
+      "a",
+    ]);
+    expect((await db.select().from(schema.briefings))[0].status).toBe("published");
+    await expect(
+      reviseToday(date, new Date(0), checkpoint(), db as unknown as ReturnType<typeof getDb>),
+    ).rejects.toThrow("changed after review");
   });
   it("publishes atomically and never republishes a date", async () => {
     const run = randomUUID();

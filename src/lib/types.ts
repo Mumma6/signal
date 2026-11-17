@@ -60,6 +60,7 @@ export type CollectionReport = {
   invalid: number;
 };
 export type Outcomes = {
+  previouslyPublished?: number;
   collected: number;
   duplicates: number;
   invalid: number;

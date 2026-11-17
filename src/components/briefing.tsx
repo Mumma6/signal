@@ -112,7 +112,7 @@ export function Briefing({
       {stale && !archive && (
         <p className="edition-notice">
           <Clock3 className="size-3.5 shrink-0" />
-          Showing the latest published edition. The next briefing is on its way.
+          Showing the latest published edition. A new briefing appears when fresh stories qualify.
         </p>
       )}
       {edition.partial && (

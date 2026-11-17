@@ -47,6 +47,9 @@ export function memoryStore() {
   let state = "new";
   let published: Checkpoint | null = null;
   const store: PipelineStore = {
+    async recentArticles() {
+      return [];
+    },
     async claim() {
       if (state === "published") return { status: "published" };
       if (state === "busy") return { status: "busy" };
@@ -60,7 +63,8 @@ export function memoryStore() {
       state = "published";
       published = structuredClone(checkpoint);
     },
-    async release() {
+    async release(_date, _run, _error, discardCheckpoint) {
+      if (discardCheckpoint) cp = null;
       state = "released";
     },
   };

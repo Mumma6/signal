@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview:refresh": "tsx scripts/preview.ts",
-    "radar:refresh": "tsx scripts/refresh-radar.ts"
+    "radar:refresh": "tsx scripts/refresh-radar.ts",
+    "briefing:revise": "tsx scripts/revise-briefing.ts"
   },
   "engines": {
     "node": ">=22.12.0"

@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, gte, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { articles, sources, briefings, briefingArticles } from "@/lib/db/schema";
 import { sourceDefinitions } from "@/lib/sources/collect";
@@ -9,6 +9,24 @@ export function createStore(db = getDb()): PipelineStore {
   const owner = (date: string, runId: string) =>
     and(eq(briefings.date, date), eq(briefings.runId, runId), eq(briefings.status, "processing"));
   return {
+    async recentArticles(date) {
+      return db
+        .select({
+          id: briefingArticles.articleId,
+          title: sql<string>`${briefingArticles.sourceSnapshot}->>'title'`,
+          url: sql<string>`${briefingArticles.sourceSnapshot}->>'url'`,
+          sourceId: sql<string>`${briefingArticles.sourceSnapshot}->>'sourceId'`,
+        })
+        .from(briefingArticles)
+        .innerJoin(briefings, eq(briefingArticles.briefingId, briefings.id))
+        .where(
+          and(
+            eq(briefings.status, "published"),
+            lt(briefings.date, date),
+            gte(briefings.date, sql`${date}::date - 30`),
+          ),
+        );
+    },
     async claim(date, runId) {
       const result = await db.execute(sql`
         INSERT INTO briefings (date, status, run_id, lease_until)
@@ -95,12 +113,13 @@ export function createStore(db = getDb()): PipelineStore {
           .where(owner(date, runId));
       });
     },
-    async release(date, runId, error) {
+    async release(date, runId, error, discardCheckpoint = false) {
       await db
         .update(briefings)
         .set({
           runId: null,
           leaseUntil: null,
+          ...(discardCheckpoint ? { checkpoint: null } : {}),
           ...(error ? { status: "failed" as const, lastError: error.slice(0, 300) } : {}),
         })
         .where(owner(date, runId));

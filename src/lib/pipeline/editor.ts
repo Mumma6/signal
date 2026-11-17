@@ -92,13 +92,31 @@ export function createEditor(): Editor {
 export function selectArticles(
   articles: Article[],
   evaluations: Evaluation[],
+  now = new Date(),
 ): (Article & { category: Category })[] {
   const byId = new Map(articles.map((a) => [a.id, a]));
   const publishers = new Map<string, number>();
+  const categories = new Map<Category, number>();
   const selected: (Article & { category: Category })[] = [];
-  for (const evaluation of evaluations
-    .filter((e) => e.score >= 60 && e.duplicateOf === null)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))) {
+  const remaining = evaluations.filter((e) => e.score >= 60 && e.duplicateOf === null);
+  const priority = (evaluation: Evaluation) => {
+    const article = byId.get(evaluation.id)!;
+    const ageHours = Math.max(0, (now.getTime() - Date.parse(article.publishedAt)) / 3600000);
+    return (
+      evaluation.score +
+      Math.max(0, 8 - ageHours / 6) -
+      (publishers.get(publisherFor(article.sourceId)) ?? 0) * 16 -
+      (categories.get(evaluation.category) ?? 0) * 4
+    );
+  };
+  while (remaining.length && selected.length < 6) {
+    remaining.sort(
+      (a, b) =>
+        priority(b) - priority(a) ||
+        byId.get(b.id)!.publishedAt.localeCompare(byId.get(a.id)!.publishedAt) ||
+        a.id.localeCompare(b.id),
+    );
+    const evaluation = remaining.shift()!;
     const article = byId.get(evaluation.id)!;
     const publisher = publisherFor(article.sourceId);
     if ((publishers.get(publisher) ?? 0) >= 2) continue;
@@ -109,7 +127,7 @@ export function selectArticles(
       continue;
     selected.push({ ...article, category: evaluation.category });
     publishers.set(publisher, (publishers.get(publisher) ?? 0) + 1);
-    if (selected.length === 6) break;
+    categories.set(evaluation.category, (categories.get(evaluation.category) ?? 0) + 1);
   }
   return selected;
 }

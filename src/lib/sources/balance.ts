@@ -1,5 +1,6 @@
 import type { Article } from "@/lib/types";
 import { publisherFor } from "./registry";
+import { scoreArticle } from "@/lib/pipeline/curation";
 
 // Multiple feeds from one publisher share a quota; a busy vendor release feed
 // cannot crowd out independent blogs, community posts, and research.
@@ -13,7 +14,12 @@ export function balanceCandidates(articles: Article[], limit = 36) {
   }
   const queues = [...groups.values()].map((group) =>
     group
-      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id))
+      .sort(
+        (a, b) =>
+          scoreArticle(b) - scoreArticle(a) ||
+          b.publishedAt.localeCompare(a.publishedAt) ||
+          a.id.localeCompare(b.id),
+      )
       .slice(0, 4),
   );
   const candidates: Article[] = [];

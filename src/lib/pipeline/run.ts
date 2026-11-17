@@ -9,6 +9,7 @@ import { radarTopics } from "@/lib/sources/github";
 import { balanceCandidates } from "@/lib/sources/balance";
 import { discoverThemes } from "./themes";
 import { evaluateArticles } from "./curation";
+import { unpublishedArticles } from "./novelty";
 
 type Dependencies = {
   store: PipelineStore;
@@ -48,6 +49,26 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
     return { status: "pending", date, outcomes: cp?.outcomes };
   };
   try {
+    // Fail closed if publication history cannot be read. Source failures may be
+    // partial; a missing history must never silently permit yesterday's stories.
+    const history = await store.recentArticles(date);
+    if (cp) {
+      const fresh = unpublishedArticles(cp.articles, history);
+      const removed = cp.articles.length - fresh.length;
+      if (removed) {
+        cp.articles = fresh;
+        cp.selected = [];
+        cp.stories = [];
+        cp.phase = "evaluate";
+        cp.outcomes.previouslyPublished = (cp.outcomes.previouslyPublished ?? 0) + removed;
+        cp.outcomes.rejected = cp.outcomes.collected - cp.outcomes.duplicates - fresh.length;
+        cp.outcomes.evaluated = 0;
+        cp.outcomes.selected = 0;
+        cp.outcomes.summaries = 0;
+        cp.outcomes.summaryFailures = 0;
+        await store.save(date, runId, cp);
+      }
+    }
     if (!cp) {
       const [collection, radar] = await Promise.allSettled([deps.collect(), deps.radar()]);
       if (collection.status === "rejected" || collection.value.articles.length === 0)
@@ -58,7 +79,12 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
         async () => deduplicate(raw),
         (result) => ({ collected: raw.length, duplicates: raw.length - result.length }),
       );
-      const candidates = balanceCandidates(unique);
+      const fresh = await observe(
+        "article.novelty",
+        async () => unpublishedArticles(unique, history),
+        (result) => ({ previouslyPublished: unique.length - result.length, fresh: result.length }),
+      );
+      const candidates = balanceCandidates(fresh);
       const themeCandidates = balanceCandidates(
         deduplicate(collection.value.contextArticles ?? raw),
         60,
@@ -69,6 +95,7 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
         (result) => ({ themes: result.length }),
       );
       cp = {
+        collectedAt: new Date(now()).toISOString(),
         phase: "evaluate",
         articles: candidates,
         selected: [],
@@ -77,6 +104,7 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
         reports,
         themes,
         outcomes: {
+          previouslyPublished: unique.length - fresh.length,
           collected: raw.length,
           duplicates: raw.length - unique.length,
           invalid: reports.reduce((n, r) => n + r.invalid, 0),
@@ -97,13 +125,21 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
     if (cp.phase === "evaluate") {
       if (deadline - now() < 5000) return pending();
       const evaluations = validateEvaluations(cp.articles, await editor.evaluate(cp.articles));
-      cp.selected = selectArticles(cp.articles, evaluations);
+      cp.selected = selectArticles(
+        cp.articles,
+        evaluations,
+        new Date(cp.collectedAt ?? `${date}T00:00:00Z`),
+      );
       cp.themes ??= discoverThemes(cp.articles, evaluations);
-      if (!cp.selected.length)
-        throw new Error("No stories met the editorial threshold; edition not published");
       cp.outcomes.evaluated = evaluations.length;
       cp.outcomes.selected = cp.selected.length;
       cp.outcomes.rejected += evaluations.length - cp.selected.length;
+      if (!cp.selected.length) {
+        // A quiet day is a business outcome, not a processing failure. The later
+        // retry may collect genuinely new material instead of replaying an empty checkpoint.
+        await store.release(date, runId, undefined, true);
+        return { status: "no-new-stories", date, outcomes: cp.outcomes };
+      }
       cp.phase = "summarize";
       await store.save(date, runId, cp);
     }

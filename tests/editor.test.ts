@@ -64,3 +64,30 @@ describe("editorial checks", () => {
     ).toBe(false);
   });
 });
+
+describe("freshness and diversity", () => {
+  const now = new Date("2026-11-17T08:00:00Z");
+  it("prefers the newer development when relevance scores are equal", async () => {
+    const items = [
+      article("a-old", { publishedAt: "2026-11-15T09:00:00Z" }),
+      article("z-new", { publishedAt: "2026-11-17T07:00:00Z" }),
+    ];
+    expect(selectArticles(items, await editor.evaluate(items), now)[0].id).toBe("z-new");
+  });
+  it("balances strong independent publishers before a second vendor post", async () => {
+    const items = [
+      article("vendor-a"),
+      article("vendor-b"),
+      article("independent", { sourceId: "simon-willison" }),
+      article("research", { sourceId: "microsoft-research" }),
+    ];
+    const chosen = selectArticles(items, await editor.evaluate(items), now);
+    expect(new Set(chosen.slice(0, 3).map((a) => a.sourceId)).size).toBe(3);
+  });
+  it("publishes fewer stories rather than padding with below-threshold candidates", async () => {
+    const items = [article("good"), article("weak")];
+    const evaluations = await editor.evaluate(items);
+    evaluations[1].score = 59;
+    expect(selectArticles(items, evaluations, now).map((a) => a.id)).toEqual(["good"]);
+  });
+});

@@ -73,29 +73,61 @@ export function scoreArticle(article: Article) {
   const titleHits = contextPatterns.filter((pattern) => pattern.test(article.title)).length;
   if (!hits && !focusedSources.has(article.sourceId)) return 15;
   if (!focusedSources.has(article.sourceId) && !titleHits && hits < 2) return 30;
-  let score = 30 + (focusedSources.has(article.sourceId) ? 20 : 0) + Math.min(24, hits * 6);
-  if (sourceDefinitions.find((source) => source.id === article.sourceId)?.group === "research")
-    score += 8;
+  const source = sourceDefinitions.find((s) => s.id === article.sourceId);
+  // Separate headline evidence from body keywords: long vendor prose should not
+  // outrank a concrete release just by mentioning agents, APIs and workflows.
+  let score = 28 + Math.min(20, titleHits * 5) + Math.min(10, hits * 2);
+  if (focusedSources.has(article.sourceId)) score += 8;
+  if (source?.group === "research") score += article.sourceId === "arxiv" ? 2 : 8;
+  if (source?.group === "community") score += 4;
   if (
-    /\b(?:launch|releas|introduc|announc|discover|publish|propos|agentic|architecture|workflow)/i.test(
-      text,
+    /\b(?:launch(?:es|ed)?|releas(?:e[sd]?|ing)|introduc(?:es?|ed|ing)|announc(?:es?|ed|ing)|available|roll(?:ing)? out|new model|open.weights?)\b/i.test(
+      article.title,
     )
   )
-    score += 14;
+    score += 18;
   if (
-    /\b(?:API|SDK|CLI|GitHub|implementation|weights|inference|evaluation|research|software|framework)\b/i.test(
-      text,
+    /\b(?:API|SDK|CLI|MCP|weights|inference|benchmark|evaluation|research|coding|software|framework|language models?|visual agents?)\b/i.test(
+      article.title,
     )
   )
     score += 10;
+  if (
+    /\b(?:API|SDK|CLI|implementation|weights|inference|evaluation|research|software|framework)\b/i.test(
+      article.content.slice(0, 1600),
+    )
+  )
+    score += 6;
+  if (
+    /\b(?:model|agent|LLM|MCP|inference|reasoning|neural|embedding|transformer|fine.tun|post.train)/i.test(
+      article.title,
+    )
+  )
+    score += 6;
+  if (/\b(?:software|engineering|workflow|coding|caching|optimization)\b/i.test(article.title))
+    score += 8;
+  if (["codex", "claude-code"].includes(article.sourceId)) score += 20;
+  // Customer stories and partnership announcements are not daily technical news.
+  if (
+    /\b(?:partnership|customer engagement|case study|customer story)\b/i.test(article.title) ||
+    /^how (?!to\b).+\b(?:built|uses?|transforms?|raises|scales|modernizes|leverages)\b/i.test(
+      article.title,
+    ) ||
+    /\/(?:customers?|customer-stories|case-studies)\//i.test(article.url)
+  )
+    return Math.min(45, score);
   if (/\b(?:sponsored|affiliate|discount code|IPO|stock market|fundrais|funding round)/i.test(text))
     score -= 25;
-  if (/\b(?:partnership|customer engagement|case study)\b/i.test(article.title)) score -= 15;
-  if (/\b(?:top|best)\s+\d+\b|\b(?:earn money|passive income|buy now)\b/i.test(article.title))
-    score -= 25;
-  return Math.max(0, Math.min(100, score));
+  if (
+    /\b(?:top|best)\s+\d+\b|\b\d+\s+(?:top|best)\b|\b(?:earn money|passive income|buy now)\b/i.test(
+      article.title,
+    )
+  )
+    score -= 30;
+  if (/\b(?:guide|tutorial|how to|best practices)\b/i.test(article.title)) score -= 6;
+  return Math.max(0, Math.min(98, score));
 }
-export function sameDevelopment(a: Article, b: Article) {
+export function sameDevelopment(a: Pick<Article, "title">, b: Pick<Article, "title">) {
   const versions = (title: string) =>
     (title.match(/\b\d+(?:\.\d+)+(?:[-.]\w+)?\b/g) ?? []).sort().join(",");
   if (versions(a.title) !== versions(b.title)) return false;
@@ -108,7 +140,12 @@ export function sameDevelopment(a: Article, b: Article) {
 export function evaluateArticles(articles: Article[]): Evaluation[] {
   const ranked = articles
     .map((article) => ({ article, score: scoreArticle(article) }))
-    .sort((a, b) => b.score - a.score || a.article.id.localeCompare(b.article.id));
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        b.article.publishedAt.localeCompare(a.article.publishedAt) ||
+        a.article.id.localeCompare(b.article.id),
+    );
   const roots: Article[] = [];
   const result = new Map<string, Evaluation>();
   for (const { article, score } of ranked) {

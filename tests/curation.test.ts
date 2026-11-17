@@ -114,3 +114,37 @@ describe("provider-free curation", () => {
     expect(results[4]).toEqual({ status: "fulfilled", value: 10 });
   });
 });
+
+describe("editorial priorities", () => {
+  it("puts concrete releases ahead of keyword-heavy customer marketing", () => {
+    const customer = article("customer", {
+      sourceId: "aws-ml",
+      title: "How MoEngage built agentic customer engagement on Amazon Bedrock AgentCore",
+      content:
+        "AI agents use inference, APIs, SDKs, reasoning, neural models and frameworks. ".repeat(25),
+    });
+    const launch = article("launch", { title: "OpenAI releases a new reasoning model and API" });
+    expect(scoreArticle(customer)).toBeLessThan(60);
+    expect(scoreArticle(launch)).toBeGreaterThan(scoreArticle(customer));
+    expect(
+      scoreArticle(
+        article("partnership", { title: "OpenAI announces strategic partnership with Example" }),
+      ),
+    ).toBeLessThan(60);
+  });
+  it("does not discard stronger older candidates before evaluation", () => {
+    const weak = Array.from({ length: 5 }, (_, i) =>
+      article(`weak-${i}`, {
+        sourceId: "aws-ml",
+        title: `How Company ${i} uses AI for customer engagement`,
+        publishedAt: "2026-11-17T07:00:00Z",
+      }),
+    );
+    const launch = article("strong", {
+      sourceId: "aws-ml",
+      title: "Introducing a new agent inference API",
+      publishedAt: "2026-11-16T12:00:00Z",
+    });
+    expect(balanceCandidates([...weak, launch]).some((a) => a.id === "strong")).toBe(true);
+  });
+});
