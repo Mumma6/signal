@@ -1,3 +1,9 @@
+export class SourceHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`Source returned HTTP ${status}`);
+    this.name = "SourceHttpError";
+  }
+}
 // Only explicit, first-party API/feed/index endpoints are fetched. Article URLs are never crawled.
 export async function fetchText(
   url: string,
@@ -10,7 +16,7 @@ export async function fetchText(
     cache: "no-store",
     redirect: "error",
   });
-  if (!response.ok) throw new Error(`Source returned HTTP ${response.status}`);
+  if (!response.ok) throw new SourceHttpError(response.status);
   const limit = 2_000_000;
   if (Number(response.headers.get("content-length")) > limit)
     throw new Error("Source response too large");
@@ -27,7 +33,11 @@ export async function fetchText(
       chunks.push(value);
     }
   } finally {
-    await reader.cancel();
+    try {
+      await reader.cancel();
+    } catch {
+      // Cancellation is cleanup; it must not mask the read/size failure.
+    }
   }
   return Buffer.concat(chunks).toString("utf8");
 }

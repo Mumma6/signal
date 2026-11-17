@@ -146,10 +146,13 @@ ESLint 9 and TypeScript 6 are intentionally used because the current Next.js ESL
 src/app/                App Router pages, metadata, RSS, API and cron routes
 src/components/         Publication UI and shadcn-style Radix primitives
 src/lib/sources/        Fixed-endpoint collectors and deterministic normalization
-src/lib/pipeline/       Local curation rules, phrase themes, bounded runner, PostgreSQL store
-src/lib/db/             Drizzle schema and lazy runtime connection pool
+src/lib/editorial/      Pure curation, selection, excerpts, novelty and shared candidate preparation
+src/lib/pipeline/       Bounded orchestration, immutable progress transitions and checkpoint contract
+src/lib/db/             Drizzle schema, pool, read models, leases and atomic publication
 src/lib/observability.ts Structured process events; no vendor dependency
 drizzle/                Versioned migrations and Drizzle snapshots
+src/lib/schemas.ts     Runtime schemas for serialized models and external boundaries
+src/lib/types.ts       Inferred model types shared by server and UI
 scripts/                Manual generation, migrations, source diagnostics
 tests/                  Business logic and PostgreSQL contract tests
 ```

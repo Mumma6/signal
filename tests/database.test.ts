@@ -6,10 +6,11 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { sql } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
-import { createStore } from "@/lib/pipeline/store";
+import { createEditionReader } from "@/lib/db/edition-reader";
+import { createStore } from "@/lib/db/briefing-store";
 import type { getDb } from "@/lib/db";
 import { article, checkpoint, story } from "./fixtures";
-import { reviseToday } from "@/lib/pipeline/revise";
+import { reviseToday } from "@/lib/db/revise";
 import { runPipeline } from "@/lib/pipeline/run";
 import { createEditor } from "@/lib/pipeline/editor";
 
@@ -17,7 +18,8 @@ describe("PostgreSQL publication contract", () => {
   const pg = new PGlite();
   const db = drizzle(pg, { schema });
   // Both adapters execute the same Drizzle PostgreSQL queries. Only driver metadata differs.
-  const store = createStore(db as unknown as ReturnType<typeof getDb>);
+  const testDb = db as unknown as ReturnType<typeof getDb>;
+  const store = createStore(testDb);
   beforeAll(async () => {
     await migrate(db, { migrationsFolder: "./drizzle" });
   }, 30000);
@@ -26,6 +28,35 @@ describe("PostgreSQL publication contract", () => {
   });
   afterAll(async () => {
     await pg.close();
+  });
+  it("fails closed on corrupt checkpoint JSON without stranding its lease", async () => {
+    const run = randomUUID();
+    await store.claim("2026-11-16", run);
+    await db.execute(
+      sql`UPDATE briefings SET checkpoint = '{"phase":"broken"}'::jsonb, lease_until=NULL, run_id=NULL`,
+    );
+    await expect(store.claim("2026-11-16", randomUUID())).rejects.toThrow(
+      "Saved briefing checkpoint is invalid",
+    );
+    const [row] = await db.select().from(schema.briefings);
+    expect(row.status).toBe("failed");
+    expect(row.runId).toBeNull();
+    expect(row.leaseUntil).toBeNull();
+    expect(row.checkpoint).toEqual({ phase: "broken" });
+  });
+  it("hydrates published read models through the same database queries used by pages", async () => {
+    const reader = createEditionReader(testDb);
+    expect(await reader.latest()).toBeNull();
+    const run = randomUUID();
+    await store.claim("2026-11-16", run);
+    await store.publish("2026-11-16", run, checkpoint());
+    const edition = await reader.byDate("2026-11-16");
+    expect(edition?.stories.map((s) => s.id)).toEqual(["a"]);
+    expect(edition?.sample).toBe(false);
+    expect((await reader.latest())?.date).toBe("2026-11-16");
+    expect((await reader.list())[0].count).toBe(1);
+    await db.execute(sql`UPDATE briefing_articles SET category='invalid'`);
+    await expect(reader.latest()).rejects.toThrow();
   });
   it("grants only one lease for concurrent claims", async () => {
     const claims = await Promise.all([
@@ -77,21 +108,16 @@ describe("PostgreSQL publication contract", () => {
     draft.articles = [article("corrected")];
     draft.selected = [{ ...draft.articles[0], category: "Models" }];
     draft.stories = [story("corrected")];
-    await reviseToday(date, current.publishedAt!, draft, db as unknown as ReturnType<typeof getDb>);
+    await reviseToday(date, current.publishedAt!, draft, testDb);
     expect(
       (await db.select().from(schema.briefingArticles)).map((r) => r.articleId).sort(),
     ).toEqual(["a", "corrected"]);
     expect((await db.select().from(schema.briefings)).every((b) => b.status === "published")).toBe(
       true,
     );
-    await expect(
-      reviseToday(
-        yesterday,
-        current.publishedAt!,
-        draft,
-        db as unknown as ReturnType<typeof getDb>,
-      ),
-    ).rejects.toThrow("Only today's");
+    await expect(reviseToday(yesterday, current.publishedAt!, draft, testDb)).rejects.toThrow(
+      "Only today's",
+    );
   });
   it("restores the original stories if a revision fails or the review is stale", async () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -101,16 +127,14 @@ describe("PostgreSQL publication contract", () => {
     const [current] = await db.select().from(schema.briefings);
     const draft = checkpoint();
     draft.articles = [];
-    await expect(
-      reviseToday(date, current.publishedAt!, draft, db as unknown as ReturnType<typeof getDb>),
-    ).rejects.toThrow();
+    await expect(reviseToday(date, current.publishedAt!, draft, testDb)).rejects.toThrow();
     expect((await db.select().from(schema.briefingArticles)).map((r) => r.articleId)).toEqual([
       "a",
     ]);
     expect((await db.select().from(schema.briefings))[0].status).toBe("published");
-    await expect(
-      reviseToday(date, new Date(0), checkpoint(), db as unknown as ReturnType<typeof getDb>),
-    ).rejects.toThrow("changed after review");
+    await expect(reviseToday(date, new Date(0), checkpoint(), testDb)).rejects.toThrow(
+      "changed after review",
+    );
   });
   it("publishes atomically and never republishes a date", async () => {
     const run = randomUUID();

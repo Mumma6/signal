@@ -2,7 +2,10 @@
 
 - Next.js App Router, TypeScript, Tailwind, local shadcn-style Radix primitives, Drizzle, and PostgreSQL. Keep this a single application; no accounts, queues, Redis, or separate backend.
 - Read `README.md` and `docs/architecture.md` before changing the pipeline. Run `npm run check`, `npm run format:check`, and `npm run build` for relevant changes.
-- Put collectors in `src/lib/sources`, business orchestration in `src/lib/pipeline`, and persistence in the store. Keep pure normalization/selection functions testable.
+- Ownership: pure rules in `src/lib/editorial`, orchestration and immutable checkpoint transitions in `src/lib/pipeline`, transport/parsing in `src/lib/sources`, and all Drizzle operations in `src/lib/db`. `pipeline/index.ts` composes actual dependencies; `editions.ts` owns React caching and preview policy.
+- Keep `editorial` independent of HTTP, PostgreSQL, React, environment reads, and workflow code. Share candidate preparation across cron, previews, and corrections. Prefer readonly inputs and explicit clocks; local maps/loops are fine when they simplify an algorithm.
+- Serialized models belong in `src/lib/schemas.ts`; infer shared types in `types.ts`. Validate external JSON and database checkpoints instead of casting. Preserve the deployed JSON shape and optional legacy checkpoint fields.
+- Publication and corrections share `db/publication.ts` inside their caller's transaction. Keep driver assertions confined to the PGlite test harness. Preserve original errors when cleanup fails; never log raw provider payloads or credentials.
 - Preserve original URLs, source attribution, exact evidence, and the distinction between source facts and editorial inference. Never substitute fabricated news or metrics for unavailable data.
 - No AI providers or model keys. The owner explicitly wants provider-free curation: local rules, source excerpts, text similarity, and recurring-phrase themes. Do not add inference calls without explicit authorization.
 - Keep date uniqueness, lease fencing, checkpoints, and transactional publication intact. Every retry must be safe. A failing source or telemetry sink must not take down unrelated work.

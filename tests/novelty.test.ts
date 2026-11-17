@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { unpublishedArticles } from "@/lib/pipeline/novelty";
+import { unpublishedArticles } from "@/lib/editorial/novelty";
 import { article } from "./fixtures";
 
 describe("publication history", () => {

@@ -7,7 +7,6 @@ import { observe } from "@/lib/observability";
 import { mapSettled } from "@/lib/concurrency";
 import { sourceDefinitions, type SourceDefinition } from "./registry";
 import { parseAnthropic, parseXaiNotes, type RawArticle } from "./pages";
-export { sourceDefinitions } from "./registry";
 
 const hnSchema = z.object({
   hits: z.array(

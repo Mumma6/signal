@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { createEditor } from "@/lib/pipeline/editor";
-import { evaluateArticles, sameDevelopment, scoreArticle } from "@/lib/pipeline/curation";
-import { discoverThemes } from "@/lib/pipeline/themes";
-import { balanceCandidates } from "@/lib/sources/balance";
+import { evaluateArticles, sameDevelopment, scoreArticle } from "@/lib/editorial/curation";
+import { discoverThemes } from "@/lib/editorial/themes";
+import { balanceCandidates } from "@/lib/editorial/balance";
 import { mapSettled } from "@/lib/concurrency";
 import { article } from "./fixtures";
 

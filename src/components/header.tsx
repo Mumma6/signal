@@ -1,4 +1,7 @@
 "use client";
+import type { EditionIndexItem } from "@/lib/types";
+import { editionIndexSchema } from "@/lib/schemas";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,20 +17,12 @@ const links = [
   { href: "/archive", label: "Archive" },
   { href: "/about", label: "About" },
 ];
-type SearchItem = {
-  date: string;
-  title: string;
-  description: string;
-  count: number;
-  sample: boolean;
-  sampleKind?: "historical" | "source-snapshot";
-};
 export function Header() {
   const path = usePathname();
   const [mobile, setMobile] = useState(false);
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");
-  const [items, setItems] = useState<SearchItem[] | null>(null);
+  const [items, setItems] = useState<EditionIndexItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -47,7 +42,7 @@ export function Header() {
         if (!res.ok) throw new Error();
         return res.json();
       })
-      .then(setItems)
+      .then((value) => setItems(editionIndexSchema.array().parse(value)))
       .catch(() => {
         if (!controller.signal.aborted) setFailed(true);
       });

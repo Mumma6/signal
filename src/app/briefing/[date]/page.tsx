@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getEdition } from "@/lib/editions";
-import { validDate } from "@/lib/pipeline/run";
+import { validDate } from "@/lib/dates";
 import { Briefing } from "@/components/briefing";
 import { formatDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";

@@ -1,5 +1,5 @@
 import type { Article } from "@/lib/types";
-import { canonicalUrl } from "@/lib/sources/normalize";
+import { canonicalUrl } from "@/lib/urls";
 import { sameDevelopment } from "./curation";
 
 type PublishedArticle = Pick<Article, "id" | "url" | "title" | "sourceId">;
@@ -20,4 +20,16 @@ export function unpublishedArticles(articles: Article[], history: PublishedArtic
           sameDevelopment(a, previous),
       ),
   );
+}
+
+export function deduplicate(articles: readonly Article[]) {
+  const urls = new Set<string>();
+  const titles = new Set<string>();
+  return articles.filter((article) => {
+    const title = article.title.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+    if (urls.has(article.url) || titles.has(title)) return false;
+    urls.add(article.url);
+    titles.add(title);
+    return true;
+  });
 }

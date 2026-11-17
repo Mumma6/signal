@@ -1,25 +1,8 @@
 import { createHash } from "node:crypto";
 import { load } from "cheerio";
-import { articleSchema, type Article } from "@/lib/types";
-
-export function canonicalUrl(input: string) {
-  const url = new URL(input);
-  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password)
-    throw new Error("Invalid article URL");
-  // No local addresses in public source links. These are links only, never fetched.
-  if (
-    url.hostname === "localhost" ||
-    !url.hostname.includes(".") ||
-    /^[\d.:\[\]]+$/.test(url.hostname)
-  )
-    throw new Error("Non-public article URL");
-  url.hash = "";
-  for (const key of [...url.searchParams.keys()])
-    if (/^(utm_.+|fbclid|gclid|ref)$/i.test(key)) url.searchParams.delete(key);
-  url.searchParams.sort();
-  url.pathname = url.pathname.replace(/\/$/, "") || "/";
-  return url.toString();
-}
+import { type Article } from "@/lib/types";
+import { articleSchema } from "@/lib/schemas";
+import { canonicalUrl } from "@/lib/urls";
 export function plainText(input: unknown): string {
   if (typeof input !== "string") return "";
   const $ = load(input);
@@ -59,15 +42,4 @@ export function normalizeArticle(
   } catch {
     return null;
   }
-}
-export function deduplicate(articles: Article[]) {
-  const urls = new Set<string>();
-  const titles = new Set<string>();
-  return articles.filter((article) => {
-    const title = article.title.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-    if (urls.has(article.url) || titles.has(title)) return false;
-    urls.add(article.url);
-    titles.add(title);
-    return true;
-  });
 }

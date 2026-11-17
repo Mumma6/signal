@@ -19,3 +19,6 @@ export function getDb() {
   instance = drizzle(pool, { schema });
   return instance;
 }
+
+export type Database = ReturnType<typeof getDb>;
+export type DatabaseSession = Pick<Database, "select" | "insert" | "update" | "delete" | "execute">;

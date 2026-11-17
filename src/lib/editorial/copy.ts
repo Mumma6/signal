@@ -1,7 +1,10 @@
-import type { Story } from "@/lib/types";
-import type { Checkpoint } from "./types";
+import type { Story, Outcomes } from "@/lib/types";
 
-export function isPartial(cp: Checkpoint) {
+export function isPartial(cp: {
+  outcomes: Outcomes;
+  stories: readonly Story[];
+  selected: readonly unknown[];
+}) {
   return (
     cp.outcomes.sourcesUnavailable > 0 ||
     cp.stories.length < cp.selected.length ||

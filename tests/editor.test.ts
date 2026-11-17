@@ -1,13 +1,9 @@
 import { describe, it, expect } from "vitest";
-import {
-  selectArticles,
-  summarySchema,
-  validateEvaluations,
-  validateGrounding,
-} from "@/lib/pipeline/editor";
+import { selectArticles } from "@/lib/editorial/selection";
+import { summarySchema, validateEvaluations, validateGrounding } from "@/lib/editorial/excerpts";
 import { article, editor, story } from "./fixtures";
 import { checkpoint } from "./fixtures";
-import { isPartial } from "@/lib/pipeline/copy";
+import { isPartial } from "@/lib/editorial/copy";
 import { sampleEdition } from "@/lib/sample";
 
 describe("editorial checks", () => {

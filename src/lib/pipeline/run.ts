@@ -1,39 +1,28 @@
+import { validDate } from "@/lib/dates";
 import { randomUUID } from "node:crypto";
-import type { Article, CollectionReport, Repository } from "@/lib/types";
+import type { NewsCollection, RepositoryCollection } from "@/lib/types";
 import type { Editor, PipelineStore, PipelineResult } from "./types";
-import { deduplicate } from "@/lib/sources/normalize";
-import { selectArticles, validateEvaluations } from "./editor";
+import { validateEvaluations } from "@/lib/editorial/excerpts";
 import { observe } from "@/lib/observability";
-import { isPartial } from "./copy";
-import { radarTopics } from "@/lib/sources/github";
-import { balanceCandidates } from "@/lib/sources/balance";
-import { discoverThemes } from "./themes";
-import { evaluateArticles } from "./curation";
-import { unpublishedArticles } from "./novelty";
+import { isPartial } from "@/lib/editorial/copy";
+import { prepareCandidates } from "@/lib/editorial/prepare";
+import {
+  recheckHistory,
+  applyEvaluations,
+  remainingArticles,
+  applyExtractions,
+  readyToPublish,
+} from "./progress";
 
 type Dependencies = {
   store: PipelineStore;
   editor: Editor;
-  collect: () => Promise<{
-    articles: Article[];
-    contextArticles?: Article[];
-    reports: CollectionReport[];
-  }>;
-  radar: () => Promise<{
-    repositories: Repository[];
-    unavailable: number;
-    releaseFailures: number;
-  }>;
+  collect: () => Promise<NewsCollection>;
+  radar: () => Promise<RepositoryCollection>;
   now?: () => number;
   budgetMs?: number;
+  radarSourceCount?: number;
 };
-export function validDate(value: string) {
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    Number.isFinite(Date.parse(value)) &&
-    new Date(value).toISOString().slice(0, 10) === value
-  );
-}
 export async function runPipeline(date: string, deps: Dependencies): Promise<PipelineResult> {
   if (!validDate(date)) throw new Error("Expected a real date in YYYY-MM-DD format");
   const { store, editor } = deps;
@@ -53,68 +42,51 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
     // partial; a missing history must never silently permit yesterday's stories.
     const history = await store.recentArticles(date);
     if (cp) {
-      const fresh = unpublishedArticles(cp.articles, history);
-      const removed = cp.articles.length - fresh.length;
-      if (removed) {
-        cp.articles = fresh;
-        cp.selected = [];
-        cp.stories = [];
-        cp.phase = "evaluate";
-        cp.outcomes.previouslyPublished = (cp.outcomes.previouslyPublished ?? 0) + removed;
-        cp.outcomes.rejected = cp.outcomes.collected - cp.outcomes.duplicates - fresh.length;
-        cp.outcomes.evaluated = 0;
-        cp.outcomes.selected = 0;
-        cp.outcomes.summaries = 0;
-        cp.outcomes.summaryFailures = 0;
-        await store.save(date, runId, cp);
-      }
+      const restored = recheckHistory(cp, history);
+      if (restored !== cp) await store.save(date, runId, restored);
+      cp = restored;
     }
     if (!cp) {
       const [collection, radar] = await Promise.allSettled([deps.collect(), deps.radar()]);
       if (collection.status === "rejected" || collection.value.articles.length === 0)
         throw new Error("No usable source material; edition not published");
-      const { articles: raw, reports } = collection.value;
-      const unique = await observe(
+      const { reports } = collection.value;
+      const prepared = await observe(
         "article.processing",
-        async () => deduplicate(raw),
-        (result) => ({ collected: raw.length, duplicates: raw.length - result.length }),
+        async () => prepareCandidates(collection.value, history),
+        (result) => ({ collected: result.counts.collected, duplicates: result.counts.duplicates }),
       );
-      const fresh = await observe(
+      await observe(
         "article.novelty",
-        async () => unpublishedArticles(unique, history),
-        (result) => ({ previouslyPublished: unique.length - result.length, fresh: result.length }),
+        async () => prepared,
+        (result) => ({
+          previouslyPublished: result.counts.previouslyPublished,
+          fresh:
+            result.counts.collected - result.counts.duplicates - result.counts.previouslyPublished,
+        }),
       );
-      const candidates = balanceCandidates(fresh);
-      const themeCandidates = balanceCandidates(
-        deduplicate(collection.value.contextArticles ?? raw),
-        60,
-      );
-      const themes = await observe(
+      await observe(
         "article.themes",
-        async () => discoverThemes(themeCandidates, evaluateArticles(themeCandidates)),
+        async () => prepared.themes,
         (result) => ({ themes: result.length }),
       );
       cp = {
         collectedAt: new Date(now()).toISOString(),
         phase: "evaluate",
-        articles: candidates,
+        articles: prepared.articles,
         selected: [],
         stories: [],
         repositories: radar.status === "fulfilled" ? radar.value.repositories : [],
         reports,
-        themes,
+        themes: prepared.themes,
         outcomes: {
-          previouslyPublished: unique.length - fresh.length,
-          collected: raw.length,
-          duplicates: raw.length - unique.length,
-          invalid: reports.reduce((n, r) => n + r.invalid, 0),
+          ...prepared.counts,
           evaluated: 0,
           selected: 0,
-          rejected: unique.length - candidates.length,
           summaries: 0,
           sourcesUnavailable:
-            reports.filter((r) => r.status === "unavailable").length +
-            (radar.status === "fulfilled" ? radar.value.unavailable : radarTopics.length),
+            prepared.counts.sourcesUnavailable +
+            (radar.status === "fulfilled" ? radar.value.unavailable : (deps.radarSourceCount ?? 3)),
           repositories: radar.status === "fulfilled" ? radar.value.repositories.length : 0,
           releaseFailures: radar.status === "fulfilled" ? radar.value.releaseFailures : 0,
           summaryFailures: 0,
@@ -125,50 +97,36 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
     if (cp.phase === "evaluate") {
       if (deadline - now() < 5000) return pending();
       const evaluations = validateEvaluations(cp.articles, await editor.evaluate(cp.articles));
-      cp.selected = selectArticles(
-        cp.articles,
-        evaluations,
-        new Date(cp.collectedAt ?? `${date}T00:00:00Z`),
-      );
-      cp.themes ??= discoverThemes(cp.articles, evaluations);
-      cp.outcomes.evaluated = evaluations.length;
-      cp.outcomes.selected = cp.selected.length;
-      cp.outcomes.rejected += evaluations.length - cp.selected.length;
+      cp = applyEvaluations(cp, evaluations, new Date(cp.collectedAt ?? `${date}T00:00:00Z`));
       if (!cp.selected.length) {
         // A quiet day is a business outcome, not a processing failure. The later
         // retry may collect genuinely new material instead of replaying an empty checkpoint.
         await store.release(date, runId, undefined, true);
         return { status: "no-new-stories", date, outcomes: cp.outcomes };
       }
-      cp.phase = "summarize";
       await store.save(date, runId, cp);
     }
     if (cp.phase === "summarize") {
-      const remaining = cp.selected.filter((a) => !cp!.stories.some((s) => s.id === a.id));
+      const remaining = remainingArticles(cp);
       for (let i = 0; i < remaining.length; i += 3) {
         if (deadline - now() < 5000) return pending();
         const batch = remaining.slice(i, i + 3);
         const results = await Promise.allSettled(batch.map((a) => editor.summarize(a)));
-        for (const result of results) {
-          if (result.status === "fulfilled") cp.stories.push(result.value);
-          else cp.outcomes.summaryFailures++;
-        }
-        cp.outcomes.summaries = cp.stories.length;
+        cp = applyExtractions(cp, results);
         await store.save(date, runId, cp);
       }
       if (!cp.stories.length) throw new Error("No readable source excerpts; edition not published");
-      const order = new Map(cp.selected.map((a, i) => [a.id, i]));
-      cp.stories.sort((a, b) => order.get(a.id)! - order.get(b.id)!);
-      cp.phase = "publish";
+      cp = readyToPublish(cp);
       await store.save(date, runId, cp);
     }
+    const publication = cp;
     await observe(
       "briefing.publication",
-      () => store.publish(date, runId, cp!),
+      () => store.publish(date, runId, publication),
       () => ({
         briefingsPublished: 1,
-        articlesSelected: cp!.stories.length,
-        partial: isPartial(cp!),
+        articlesSelected: publication.stories.length,
+        partial: isPartial(publication),
       }),
     );
     return {
@@ -179,11 +137,18 @@ export async function runPipeline(date: string, deps: Dependencies): Promise<Pip
     };
   } catch (error) {
     // Avoid persisting provider messages, which can contain credentials or source text.
-    await store.release(
-      date,
-      runId,
-      "Generation failed. Inspect structured process logs and retry the same date.",
-    );
+    try {
+      await observe("briefing.release", () =>
+        store.release(
+          date,
+          runId,
+          "Generation failed. Inspect structured process logs and retry the same date.",
+        ),
+      );
+    } catch {
+      // The release failure is recorded separately; preserve the processing error.
+      // A lease that could not be released remains recoverable through expiry.
+    }
     throw error;
   }
 }

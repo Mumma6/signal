@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { runPipeline, validDate } from "@/lib/pipeline/run";
+import { runPipeline } from "@/lib/pipeline/run";
+import { validDate } from "@/lib/dates";
 import { article, editor, memoryStore } from "./fixtures";
 import type { Article } from "@/lib/types";
 

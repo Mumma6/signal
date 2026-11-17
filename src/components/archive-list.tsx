@@ -1,18 +1,10 @@
 "use client";
+import type { EditionIndexItem } from "@/lib/types";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-type Item = {
-  id: string;
-  date: string;
-  title: string;
-  description: string;
-  count: number;
-  sample: boolean;
-  sampleKind?: "historical" | "source-snapshot";
-};
-export function ArchiveList({ editions }: { editions: Item[] }) {
+export function ArchiveList({ editions }: { editions: EditionIndexItem[] }) {
   const [query, setQuery] = useState("");
   const [month, setMonth] = useState("all");
   const months = [...new Set(editions.map((e) => e.date.slice(0, 7)))];

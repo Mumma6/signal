@@ -1,5 +1,7 @@
+import { canonicalUrl } from "@/lib/urls";
+import { deduplicate } from "@/lib/editorial/novelty";
 import { describe, it, expect } from "vitest";
-import { canonicalUrl, deduplicate, normalizeArticle, plainText } from "@/lib/sources/normalize";
+import { normalizeArticle, plainText } from "@/lib/sources/normalize";
 import { parseFeed } from "@/lib/sources/collect";
 import { article } from "./fixtures";
 

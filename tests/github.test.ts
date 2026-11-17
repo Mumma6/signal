@@ -1,3 +1,4 @@
+import { SourceHttpError } from "@/lib/sources/http";
 import { describe, expect, it } from "vitest";
 import {
   collectRepositories,
@@ -78,7 +79,7 @@ describe("popular and active GitHub discovery", () => {
     let calls = 0;
     const result = await collectRepositories(now, async (url) => {
       calls++;
-      if (url.includes("/releases/latest")) throw new Error("Source returned HTTP 404");
+      if (url.includes("/releases/latest")) throw new SourceHttpError(404);
       if (url.includes("topic%3Aai-agents")) throw new Error("rate limited");
       return JSON.stringify({
         incomplete_results: false,

@@ -1,4 +1,5 @@
 import type { Edition } from "./types";
+import { editionSchema } from "./schemas";
 import preview from "./preview.json";
 const radarProjects = [
   {
@@ -130,4 +131,5 @@ export const historicalEdition: Edition = {
 };
 
 // An explicit, dated local snapshot can be refreshed without a database or model account.
-export const sampleEdition: Edition = (preview as Edition | null) ?? historicalEdition;
+export const sampleEdition: Edition =
+  preview === null ? historicalEdition : editionSchema.parse(preview);

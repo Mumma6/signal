@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { briefings, briefingArticles } from "@/lib/db/schema";
-import { createStore } from "./store";
-import type { Checkpoint } from "./types";
+import { publishBriefing } from "./publication";
+import type { Checkpoint } from "@/lib/pipeline/types";
 
 // Owner-only CLI maintenance. Never exposed through an HTTP route or cron.
 // The caller must save a backup and review the replacement before applying it.
@@ -28,8 +28,7 @@ export async function reviseToday(
     const runId = randomUUID();
     await tx.update(briefings).set({ status: "processing", runId }).where(eq(briefings.id, row.id));
     await tx.delete(briefingArticles).where(eq(briefingArticles.briefingId, row.id));
-    // A nested transaction uses a savepoint; the revision, joins and normal
-    // publication checks commit together or leave the original edition intact.
-    await createStore(tx as unknown as ReturnType<typeof getDb>).publish(date, runId, draft);
+    // Reuse publication inside this transaction; no nested store or driver cast.
+    await publishBriefing(tx, date, runId, draft);
   });
 }

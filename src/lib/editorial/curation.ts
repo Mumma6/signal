@@ -1,5 +1,5 @@
 import type { Article, Category } from "@/lib/types";
-import type { Evaluation } from "./types";
+import type { Evaluation } from "@/lib/editorial/types";
 import { sourceDefinitions } from "@/lib/sources/registry";
 
 export const stopWords = new Set(
@@ -137,7 +137,7 @@ export function sameDevelopment(a: Pick<Article, "title">, b: Pick<Article, "tit
   const union = new Set([...left, ...right]).size;
   return common >= 3 && common / Math.max(1, union) >= 0.72;
 }
-export function evaluateArticles(articles: Article[]): Evaluation[] {
+export function evaluateArticles(articles: readonly Article[]): Evaluation[] {
   const ranked = articles
     .map((article) => ({ article, score: scoreArticle(article) }))
     .sort(

@@ -1,33 +1,17 @@
+import { prepareCandidates } from "../src/lib/editorial/prepare";
 import { config } from "dotenv";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { and, eq } from "drizzle-orm";
-import { z } from "zod";
+import { newsCollectionSchema } from "../src/lib/schemas";
 import { getDb } from "../src/lib/db";
 import { briefings, briefingArticles } from "../src/lib/db/schema";
-import { createStore } from "../src/lib/pipeline/store";
-import { createEditor, selectArticles } from "../src/lib/pipeline/editor";
-import { unpublishedArticles } from "../src/lib/pipeline/novelty";
-import { deduplicate } from "../src/lib/sources/normalize";
-import { balanceCandidates } from "../src/lib/sources/balance";
-import { articleSchema } from "../src/lib/types";
-import { reviseToday } from "../src/lib/pipeline/revise";
-import { discoverThemes } from "../src/lib/pipeline/themes";
-import { evaluateArticles } from "../src/lib/pipeline/curation";
+import { createStore } from "../src/lib/db/briefing-store";
+import { createEditor } from "../src/lib/pipeline/editor";
+import { selectArticles } from "../src/lib/editorial/selection";
+import { reviseToday } from "../src/lib/db/revise";
 import type { Checkpoint } from "../src/lib/pipeline/types";
 config({ path: ".env.local" });
-const inputSchema = z.object({
-  articles: z.array(articleSchema),
-  contextArticles: z.array(articleSchema).optional(),
-  reports: z.array(
-    z.object({
-      source: z.string(),
-      count: z.number(),
-      invalid: z.number(),
-      status: z.enum(["ok", "unavailable"]),
-    }),
-  ),
-});
 async function main() {
   const date = new Date().toISOString().slice(0, 10);
   const input = process.argv[2];
@@ -43,7 +27,7 @@ async function main() {
   if (apply && !backupArg) throw new Error("An explicit local backup path is required for --apply");
   if (apply && !expectedArg)
     throw new Error("Pass --expected-published-at from the reviewed dry run");
-  const collection = inputSchema.parse(JSON.parse(await readFile(input, "utf8")));
+  const collection = newsCollectionSchema.parse(JSON.parse(await readFile(input, "utf8")));
   const now = new Date();
   if (
     collection.articles.some(
@@ -67,19 +51,14 @@ async function main() {
     .from(briefingArticles)
     .where(eq(briefingArticles.briefingId, edition.id));
   const history = await createStore(db).recentArticles(date);
-  const unique = deduplicate(collection.articles);
-  const fresh = unpublishedArticles(unique, history);
-  const candidates = balanceCandidates(fresh);
+  const prepared = prepareCandidates(collection, history);
+  const candidates = prepared.articles;
   const editor = createEditor();
   const evaluations = await editor.evaluate(candidates);
   const selected = selectArticles(candidates, evaluations, now);
   const stories = await Promise.all(selected.map((a) => editor.summarize(a)));
   if (!stories.length)
     throw new Error("No qualified unseen stories; existing edition left unchanged");
-  const themeCandidates = balanceCandidates(
-    deduplicate(collection.contextArticles ?? collection.articles),
-    60,
-  );
   const draft: Checkpoint = {
     phase: "publish",
     collectedAt: now.toISOString(),
@@ -88,16 +67,13 @@ async function main() {
     stories,
     repositories: edition.repositories,
     reports: collection.reports,
-    themes: discoverThemes(themeCandidates, evaluateArticles(themeCandidates)),
+    themes: prepared.themes,
     outcomes: {
       ...edition.outcomes,
-      collected: collection.articles.length,
-      duplicates: collection.articles.length - unique.length,
-      previouslyPublished: unique.length - fresh.length,
-      invalid: collection.reports.reduce((n, r) => n + r.invalid, 0),
+      ...prepared.counts,
       evaluated: evaluations.length,
       selected: selected.length,
-      rejected: unique.length - selected.length,
+      rejected: prepared.counts.rejected + evaluations.length - selected.length,
       summaries: stories.length,
       summaryFailures: 0,
       sourcesUnavailable: collection.reports.filter((r) => r.status === "unavailable").length,

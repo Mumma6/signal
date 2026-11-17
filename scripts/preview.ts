@@ -1,25 +1,22 @@
+import { prepareCandidates } from "../src/lib/editorial/prepare";
 import { config } from "dotenv";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { collectArticles } from "../src/lib/sources/collect";
 import { collectRepositories } from "../src/lib/sources/github";
-import { balanceCandidates } from "../src/lib/sources/balance";
-import { deduplicate } from "../src/lib/sources/normalize";
-import { createEditor, selectArticles } from "../src/lib/pipeline/editor";
-import { discoverThemes } from "../src/lib/pipeline/themes";
-import { evaluateArticles } from "../src/lib/pipeline/curation";
-import { editionCopy } from "../src/lib/pipeline/copy";
+import { createEditor } from "../src/lib/pipeline/editor";
+import { selectArticles } from "../src/lib/editorial/selection";
+import { editionCopy } from "../src/lib/editorial/copy";
 import type { Edition } from "../src/lib/types";
 config({ path: ".env.local" });
 async function main() {
   const now = new Date();
   const [news, radar] = await Promise.all([collectArticles(now), collectRepositories(now)]);
-  const unique = deduplicate(news.articles);
-  const articles = balanceCandidates(unique);
+  const prepared = prepareCandidates(news);
+  const articles = prepared.articles;
   const editor = createEditor();
   const evaluations = await editor.evaluate(articles);
-  const themeCandidates = balanceCandidates(deduplicate(news.contextArticles), 60);
-  const selected = selectArticles(articles, evaluations);
+  const selected = selectArticles(articles, evaluations, now);
   const results = await Promise.allSettled(selected.map((a) => editor.summarize(a)));
   const stories = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
   if (!stories.length) throw new Error("No readable stories; existing snapshot left unchanged.");
@@ -29,7 +26,7 @@ async function main() {
     ...editionCopy(stories),
     stories,
     repositories: radar.repositories,
-    themes: discoverThemes(themeCandidates, evaluateArticles(themeCandidates)),
+    themes: prepared.themes,
     reports: news.reports,
     sample: true,
     sampleKind: "source-snapshot",
@@ -40,15 +37,12 @@ async function main() {
       radar.releaseFailures > 0 ||
       stories.length < selected.length,
     outcomes: {
-      collected: news.articles.length,
-      duplicates: news.articles.length - unique.length,
-      invalid: news.reports.reduce((n, r) => n + r.invalid, 0),
+      ...prepared.counts,
       evaluated: evaluations.length,
       selected: selected.length,
-      rejected: unique.length - selected.length,
+      rejected: prepared.counts.rejected + evaluations.length - selected.length,
       summaries: stories.length,
-      sourcesUnavailable:
-        news.reports.filter((r) => r.status === "unavailable").length + radar.unavailable,
+      sourcesUnavailable: prepared.counts.sourcesUnavailable + radar.unavailable,
       repositories: radar.repositories.length,
       releaseFailures: radar.releaseFailures,
       summaryFailures: selected.length - stories.length,

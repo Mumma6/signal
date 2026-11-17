@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Repository } from "@/lib/types";
-import { fetchText } from "./http";
+import { fetchText, SourceHttpError } from "./http";
 import { observe } from "@/lib/observability";
 import { mapSettled } from "@/lib/concurrency";
 
@@ -50,7 +50,15 @@ export function radarSearchUrl(topic: string, now: Date) {
   const query = `topic:${topic} stars:>=${radarMinimumStars} pushed:>=${date(14)} archived:false fork:false is:public size:>10`;
   return `https://api.github.com/search/repositories?${new URLSearchParams({ q: query, sort: "updated", order: "desc", per_page: "10" })}`;
 }
-export function eligibleRepository(repo: GitHubRepo, now: Date) {
+type EligibleRepository = GitHubRepo & {
+  description: string;
+  language: string;
+  license: { spdx_id: string };
+  pushed_at: string;
+};
+type Candidate = { repo: GitHubRepo; topic: string };
+type EligibleCandidate = { repo: EligibleRepository; topic: string };
+export function eligibleRepository(repo: GitHubRepo, now: Date): repo is EligibleRepository {
   const created = Date.parse(repo.created_at);
   const pushed = Date.parse(repo.pushed_at ?? "");
   return (
@@ -78,14 +86,14 @@ export function eligibleRepository(repo: GitHubRepo, now: Date) {
   );
 }
 
-export function selectRepositories(candidates: { repo: GitHubRepo; topic: string }[], now: Date) {
-  const unique = new Map<string, { repo: GitHubRepo; topic: string }>();
+export function selectRepositories(candidates: Candidate[], now: Date) {
+  const unique = new Map<string, EligibleCandidate>();
   for (const candidate of candidates)
     if (
       eligibleRepository(candidate.repo, now) &&
       !unique.has(candidate.repo.full_name.toLowerCase())
     )
-      unique.set(candidate.repo.full_name.toLowerCase(), candidate);
+      unique.set(candidate.repo.full_name.toLowerCase(), { ...candidate, repo: candidate.repo });
   const groups = radarTopics.map((topic) =>
     [...unique.values()]
       .filter((c) => c.topic === topic)
@@ -95,7 +103,7 @@ export function selectRepositories(candidates: { repo: GitHubRepo; topic: string
           a.repo.full_name.localeCompare(b.repo.full_name),
       ),
   );
-  const selected: { repo: GitHubRepo; topic: string }[] = [];
+  const selected: EligibleCandidate[] = [];
   const owners = new Set<string>();
   for (let round = 0; round < 2; round++)
     for (const group of groups) {
@@ -137,12 +145,13 @@ export async function collectRepositories(now = new Date(), read: typeof fetchTe
     result.status === "fulfilled" ? result.value.candidates : [],
   );
   const selected = selectRepositories(candidates, now);
-  let releaseFailures = 0;
+
   const releases = await mapSettled(selected, 3, ({ repo, topic }) =>
     observe(
       "github.release_collection",
       async () => {
         let release: z.infer<typeof releaseSchema> | null = null;
+        let releaseUnavailable = false;
         try {
           const result = releaseSchema.parse(
             JSON.parse(
@@ -157,36 +166,45 @@ export async function collectRepositories(now = new Date(), read: typeof fetchTe
             throw new Error("Invalid stable release");
           release = result;
         } catch (error) {
-          if (!(error instanceof Error && error.message === "Source returned HTTP 404"))
-            releaseFailures++;
+          if (!(error instanceof SourceHttpError && error.status === 404))
+            releaseUnavailable = true;
         }
         return {
-          name: repo.full_name,
-          description: repo.description!,
-          url: repo.html_url,
-          stars: repo.stargazers_count,
-          language: repo.language,
-          pushedAt: repo.pushed_at,
-          createdAt: repo.created_at,
-          license: repo.license!.spdx_id,
-          discoveryTopic: topic,
-          release: release?.tag_name ?? null,
-          releaseUrl: release?.html_url ?? null,
-          releasePublishedAt: release?.published_at ?? null,
-          reason: `Popular in ${topic}: at least 1,000 stars, pushed within 14 days, with a declared ${repo.license!.spdx_id} license.`,
-          collectedAt: now.toISOString(),
-        } satisfies Repository;
+          releaseUnavailable,
+          repository: {
+            name: repo.full_name,
+            description: repo.description,
+            url: repo.html_url,
+            stars: repo.stargazers_count,
+            language: repo.language,
+            pushedAt: repo.pushed_at,
+            createdAt: repo.created_at,
+            license: repo.license.spdx_id,
+            discoveryTopic: topic,
+            release: release?.tag_name ?? null,
+            releaseUrl: release?.html_url ?? null,
+            releasePublishedAt: release?.published_at ?? null,
+            reason: `Popular in ${topic}: at least 1,000 stars, pushed within 14 days, with a declared ${repo.license.spdx_id} license.`,
+            collectedAt: now.toISOString(),
+          } satisfies Repository,
+        };
       },
-      (result) => ({ repository: result.name, releaseAvailable: result.release !== null }),
+      (result) => ({
+        repository: result.repository.name,
+        releaseAvailable: result.repository.release !== null,
+        releaseUnavailable: result.releaseUnavailable,
+      }),
     ),
   );
   return {
     repositories: releases.flatMap((result) =>
-      result.status === "fulfilled" ? [result.value] : [],
+      result.status === "fulfilled" ? [result.value.repository] : [],
     ),
     unavailable:
       searches.filter((r) => r.status === "rejected" || r.value.incomplete).length +
       releases.filter((r) => r.status === "rejected").length,
-    releaseFailures,
+    releaseFailures: releases.filter(
+      (result) => result.status === "fulfilled" && result.value.releaseUnavailable,
+    ).length,
   };
 }

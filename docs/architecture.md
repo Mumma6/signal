@@ -59,4 +59,23 @@ The public application is read-only. Both generation routes require a timing-saf
 
 Responses include frame denial, MIME sniffing protection, a restrictive permissions policy, a referrer policy, and CSP. Next.js requires inline hydration scripts; `unsafe-inline` is allowed for scripts/styles. `unsafe-eval` is allowed only in development for React debugging. There are no arbitrary script or tracking origins. The production host supplies HTTPS. Keep application and migration credentials isolated by environment and apply the provider's least-privilege configuration.
 
-Explicit owner corrections use `briefing:revise`: a dry run by default, then an apply command with a mandatory local backup. Only today’s edition is eligible. The transaction locks the published row, checks the reviewed publication timestamp, replaces joins, and uses normal fenced publication within a savepoint. A failed correction rolls back to the original edition. Scheduled execution never revises a published date.
+Explicit owner corrections use `briefing:revise`: a dry run by default, then an apply command with a mandatory local backup. Only today’s edition is eligible. The transaction locks the published row, checks the reviewed publication timestamp, replaces joins, and calls the shared publication operation inside the existing transaction. A failed correction rolls back to the original edition. Scheduled execution never revises a published date.
+
+## Module ownership
+
+- `editorial/` owns pure rules: candidate preparation, relevance, selection, novelty, source excerpts, themes, and edition copy. It reads explicit inputs and immutable publisher metadata; it does not import PostgreSQL, React, environment variables, HTTP clients, or workflow code. Candidate preparation is shared by the cron runner, preview command, and correction command.
+- `pipeline/` owns the application process. `run.ts` sequences I/O and checkpoints; `progress.ts` implements immutable state transitions. `editor.ts` adds process events around the pure editor. `index.ts` is the composition root that supplies actual collectors and the PostgreSQL store.
+- `sources/` owns RSS/Atom, official-page, Hacker News, and GitHub transport/parsing. `SourceHttpError.status` distinguishes a normal missing GitHub release from an unavailable provider. Workers return release-failure metadata; aggregation does not use a shared mutable counter.
+- `db/` owns Drizzle and PostgreSQL operations. `briefing-store.ts` implements leases and saved progress; `publication.ts` is the shared transaction operation; `revise.ts` performs explicit owner corrections; `edition-reader.ts` hydrates validated published models. A transaction is passed as a small structural `DatabaseSession`, with no production driver assertions or nested store construction.
+- `editions.ts` composes the reader with preview policy and React request memoization. Neither the reader nor editorial rules knows about preview mode.
+- `schemas.ts` defines serialized model validation. `types.ts` derives TypeScript types from those schemas. `pipeline/checkpoint.ts` retains deployed checkpoint phase names and optional legacy fields. The browser search index, local snapshots, CLI collection inputs, database checkpoints, and hydrated editions are validated at their respective boundaries.
+
+The PostgreSQL pool is an intentional process-local singleton so requests reuse connections. Other mutable state is scoped to an invocation or local algorithm; checkpoint transitions return new values instead of editing persisted inputs. Small bounded loops and maps remain where they clarify ranking and collection.
+
+## Error ownership
+
+A quiet-day outcome, a missing stable release, and a failed integration are different results. Public cron/API errors remain generic and exclude source payloads and credentials. A failed lease release is recorded independently and cannot replace the processing error; expiry still permits recovery. A malformed saved checkpoint fails closed, retains the original JSON for diagnosis, and releases the newly acquired lease. Observability delivery remains deliberately best-effort. Database drivers are only asserted in the PGlite test harness, where two Drizzle drivers execute the same SQL contracts.
+
+## Remaining limits
+
+Headline similarity remains lexical, and selection rules cannot judge all editorial nuance. Search indexes edition metadata rather than full article bodies. The database JSON column layout and legacy `summarize`/`ai` labels are retained for compatibility; changing them would need an explicit migration. No model provider is connected. These limits are intentional and separate from module organization.
