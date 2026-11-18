@@ -1,8 +1,8 @@
 "use client";
 import { Check, Link2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Tooltip } from "./ui/tooltip";
+import { Button } from "../ui/button";
+import { Tooltip } from "../ui/tooltip";
 export function ShareButton({ path }: { path: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   async function copy() {

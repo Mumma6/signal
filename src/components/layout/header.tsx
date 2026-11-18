@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Search, Menu, X, Command } from "lucide-react";
 import { SignalWordmark } from "./brand";
-import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
 import { cn } from "@/lib/utils";
 
 const links = [

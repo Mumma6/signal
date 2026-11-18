@@ -12,8 +12,8 @@ import {
 import { checkpointSchema } from "@/lib/pipeline/checkpoint";
 import { editionSchema, newsCollectionSchema } from "@/lib/schemas";
 import { runPipeline } from "@/lib/pipeline/run";
-import { article, checkpoint, editor, memoryStore, story } from "./fixtures";
-import { sampleEdition, historicalEdition } from "@/lib/sample";
+import { article, checkpoint, editor, memoryStore, story } from "../support/fixtures";
+import { sampleEdition, historicalEdition } from "@/lib/preview";
 
 function freeze<T>(value: T): T {
   if (value && typeof value === "object") {

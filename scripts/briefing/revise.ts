@@ -1,16 +1,16 @@
-import { prepareCandidates } from "../src/lib/editorial/prepare";
+import { prepareCandidates } from "../../src/lib/editorial/prepare";
 import { config } from "dotenv";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { and, eq } from "drizzle-orm";
-import { newsCollectionSchema } from "../src/lib/schemas";
-import { getDb } from "../src/lib/db";
-import { briefings, briefingArticles } from "../src/lib/db/schema";
-import { createStore } from "../src/lib/db/briefing-store";
-import { createEditor } from "../src/lib/editorial/editor";
-import { selectArticles } from "../src/lib/editorial/selection";
-import { reviseToday } from "../src/lib/db/revise";
-import type { Checkpoint } from "../src/lib/pipeline/types";
+import { newsCollectionSchema } from "../../src/lib/schemas";
+import { getDb } from "../../src/lib/db";
+import { briefings, briefingArticles } from "../../src/lib/db/schema";
+import { createStore } from "../../src/lib/db/briefing-store";
+import { createEditor } from "../../src/lib/editorial/editor";
+import { selectArticles } from "../../src/lib/editorial/selection";
+import { reviseToday } from "../../src/lib/db/revise";
+import type { Checkpoint } from "../../src/lib/pipeline/types";
 config({ path: ".env.local" });
 async function main() {
   const date = new Date().toISOString().slice(0, 10);

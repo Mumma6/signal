@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { SignalMark } from "@/components/brand";
+import { SignalMark } from "@/components/layout/brand";
 export default function ErrorPage({
   reset,
 }: {

@@ -1,5 +1,5 @@
 import { getLatestEdition } from "@/lib/editions";
-import { editionFeed } from "@/lib/feed";
+import { editionFeed } from "@/lib/http/feed";
 export const dynamic = "force-dynamic";
 export async function GET() {
   try {

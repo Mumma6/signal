@@ -13,9 +13,9 @@ import {
 import type { BriefingView } from "@/lib/presentation";
 import type { Story } from "@/lib/types";
 import { cn, formatDate, readingMinutes } from "@/lib/utils";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { RadarCard } from "./radar-card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { RadarCard } from "../radar/radar-card";
 import { SourceDetails } from "./source-details";
 import { ShareButton } from "./share-button";
 import { ConversationThemes } from "./themes";

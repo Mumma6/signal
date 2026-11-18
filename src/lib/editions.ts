@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createEditionReader } from "./db/edition-reader";
-import { sampleEdition } from "./sample";
+import { sampleEdition } from "./preview";
 import type { Edition, EditionIndexItem } from "./types";
 
 // Composition owns preview policy and React request deduplication; the reader

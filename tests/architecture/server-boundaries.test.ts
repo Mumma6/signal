@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { toBriefingView } from "@/lib/editions";
-import { sampleEdition } from "@/lib/sample";
+import { sampleEdition } from "@/lib/preview";
 
 const src = resolve("src");
 function modules(directory: string): string[] {
@@ -104,6 +104,8 @@ describe("server and browser boundaries", () => {
     const backend = [
       ...modules(join(src, "lib/db")),
       ...modules(join(src, "lib/editorial")),
+      ...modules(join(src, "lib/http")),
+      ...modules(join(src, "lib/preview")),
       ...modules(join(src, "lib/pipeline")),
       ...modules(join(src, "lib/sources")),
     ].filter((file) => !file.endsWith("/types.ts"));

@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 async function main() {
-  const { collectArticles } = await import("../src/lib/sources/collect");
-  const { collectRepositories } = await import("../src/lib/sources/github");
+  const { collectArticles } = await import("../../src/lib/sources/collect");
+  const { collectRepositories } = await import("../../src/lib/sources/github");
   const [news, radar] = await Promise.all([collectArticles(), collectRepositories()]);
   console.info(
     JSON.stringify(

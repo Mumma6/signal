@@ -44,7 +44,7 @@ Themes use a separate seven-day context window from the same feed responses, whi
 
 GitHub Radar searches `llm`, `ai-agents`, and `machine-learning` topics for repositories with at least 1,000 stars and a push within 14 days. Established repositories are eligible: freshness comes from activity and release dates, rather than repository creation. Eligibility excludes inactive, unlicensed, forked, mirrored, archived, template, and common list repositories, and requires a language, technical description, and size above 10 KB. Selection balances at most two per topic and one per owner, ordered by recent push. Stars are a popularity threshold, not a quality assessment. Latest stable releases are collected for at most six results. Search failures and incomplete responses are reported as partial coverage. Empty results are never padded. The explicit `radar:refresh` command can replace today's published repository metadata after a complete collection; news and historical editions stay unchanged.
 
-The local preview command writes a dated, public-data-only snapshot to `src/lib/preview.json`. It needs neither a database nor a model account. Page requests read this checked-in snapshot when no database is configured, and do not call upstreams. The command leaves the prior snapshot intact if no readable stories are available.
+The local preview command writes a dated, public-data-only snapshot to `src/lib/preview/snapshot.json`. It needs neither a database nor a model account. Page requests read this checked-in snapshot when no database is configured, and do not call upstreams. The command leaves the prior snapshot intact if no readable stories are available.
 
 ## Schema changes
 
@@ -68,6 +68,8 @@ Explicit owner corrections use `briefing:revise`: a dry run by default, then an 
 - `db/` owns Drizzle and PostgreSQL operations. `briefing-store.ts` implements leases and saved progress; `publication.ts` is the shared transaction operation; `revise.ts` performs explicit owner corrections; `edition-reader.ts` hydrates validated published models. A transaction is passed as a small structural `DatabaseSession`, with no production driver assertions or nested store construction.
 - `editions.ts` composes the reader with preview policy and React request memoization. Neither the reader nor editorial rules knows about preview mode.
 - `schemas.ts` defines serialized model validation. `types.ts` derives TypeScript types from those schemas. `pipeline/checkpoint.ts` retains deployed checkpoint phase names and optional legacy fields. The client-safe search index uses `presentation.ts`. Local snapshots, CLI collection inputs, database checkpoints, and hydrated editions are validated against server-only schemas.
+
+UI components are grouped by layout, briefing, archive, radar, and shared Radix primitives. `preview/` keeps the validated sample reader beside its checked-in source snapshot. `http/` contains cron authorization and RSS serialization. Maintenance scripts are grouped under `scripts/briefing`, `scripts/db`, and `scripts/sources`; npm command names and explicit server conditions remain the entry points. Tests mirror the backend responsibilities, with reusable fixtures and the marker alias under `tests/support`.
 
 The PostgreSQL pool is an intentional process-local singleton so requests reuse connections. Other mutable state is scoped to an invocation or local algorithm; checkpoint transitions return new values instead of editing persisted inputs. Small bounded loops and maps remain where they clarify ranking and collection.
 

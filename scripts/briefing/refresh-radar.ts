@@ -1,10 +1,10 @@
 import { config } from "dotenv";
 import { and, eq } from "drizzle-orm";
 import { readFile, writeFile } from "node:fs/promises";
-import { collectRepositories } from "../src/lib/sources/github";
-import { getDb } from "../src/lib/db";
-import { briefings } from "../src/lib/db/schema";
-import { editionSchema } from "../src/lib/schemas";
+import { collectRepositories } from "../../src/lib/sources/github";
+import { getDb } from "../../src/lib/db";
+import { briefings } from "../../src/lib/db/schema";
+import { editionSchema } from "../../src/lib/schemas";
 config({ path: ".env.local" });
 async function main() {
   const now = new Date();
@@ -16,7 +16,7 @@ async function main() {
   if (!radar.repositories.length || radar.unavailable || radar.releaseFailures)
     throw new Error("Incomplete GitHub collection; existing snapshot left unchanged.");
   if (previewOnly) {
-    const path = new URL("../src/lib/preview.json", import.meta.url);
+    const path = new URL("../../src/lib/preview/snapshot.json", import.meta.url);
     const edition = editionSchema.parse(JSON.parse(await readFile(path, "utf8")));
     if (edition.date !== date)
       throw new Error("Refresh the full preview first; its news snapshot is from another date.");

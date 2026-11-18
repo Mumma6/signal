@@ -12,21 +12,20 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
-    "db:migrate": "node --conditions=react-server --import tsx scripts/migrate.ts",
-    "briefing:generate": "node --conditions=react-server --import tsx scripts/generate.ts",
+    "db:migrate": "node --conditions=react-server --import tsx scripts/db/migrate.ts",
+    "briefing:generate": "node --conditions=react-server --import tsx scripts/briefing/generate.ts",
     "check": "npm run typecheck && npm run lint && npm test",
-    "sources:check": "node --conditions=react-server --import tsx scripts/check-sources.ts",
+    "sources:check": "node --conditions=react-server --import tsx scripts/sources/check.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview:refresh": "node --conditions=react-server --import tsx scripts/preview.ts",
-    "radar:refresh": "node --conditions=react-server --import tsx scripts/refresh-radar.ts",
-    "briefing:revise": "node --conditions=react-server --import tsx scripts/revise-briefing.ts"
+    "preview:refresh": "node --conditions=react-server --import tsx scripts/sources/refresh-preview.ts",
+    "radar:refresh": "node --conditions=react-server --import tsx scripts/briefing/refresh-radar.ts",
+    "briefing:revise": "node --conditions=react-server --import tsx scripts/briefing/revise.ts"
   },
   "engines": {
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "@flowmarkdev/node": "^0.3.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@radix-ui/react-dialog": "^1.3.1",
