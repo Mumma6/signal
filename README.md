@@ -26,7 +26,7 @@ Refresh the local snapshot at any time without a database or model account:
 npm run preview:refresh
 ```
 
-This reads the configured public sources and writes `src/lib/preview.json`. It does not publish an edition or change a database. The checked-in snapshot is fixed until refreshed; web requests do not trigger upstream API calls.
+This reads the configured public sources and writes `src/lib/preview/snapshot.json`. It does not publish an edition or change a database. The checked-in snapshot is fixed until refreshed; web requests do not trigger upstream API calls.
 
 With a configured database, an empty database shows a first-edition state; a database outage shows the recovery screen. Sample data is never substituted for unavailable production data.
 
@@ -52,11 +52,9 @@ Refresh the homepage. Subsequent invocations for that UTC date return `already-p
 | `DATABASE_URL_UNPOOLED` | Direct PostgreSQL URL for explicit migrations               | Migrations                  |
 | `CRON_SECRET`           | At least 32 random characters; protects both cron endpoints | HTTP generation             |
 | `GITHUB_TOKEN`          | Optional read-only token to raise public GitHub API quotas  | Optional                    |
-| `FLOWMARK_API_KEY`      | Server write key for briefing telemetry. Set it yourself    | Optional                    |
-| `FLOWMARK_API_URL`      | Flowmark API origin, `https://api.flowmark.dev`             | With the write key          |
 | `NEXT_PUBLIC_SITE_URL`  | Canonical origin, such as `https://signal.example`          | Production metadata and RSS |
 
-Never expose database, GitHub, cron, or Flowmark credentials with `NEXT_PUBLIC_`. The local generation command loads `.env.local` and invokes the same pipeline directly; it doesn't bypass authentication on the HTTP route. There are no inference charges; hosting, database, and optional domain costs depend on your own plans and usage.
+Never expose database, GitHub, or cron credentials with `NEXT_PUBLIC_`. The local generation command loads `.env.local` and invokes the same pipeline directly; it doesn't bypass authentication on the HTTP route. There are no inference charges; hosting, database, and optional domain costs depend on your own plans and usage.
 
 ## Commands
 
@@ -145,18 +143,29 @@ ESLint 9 and TypeScript 6 are intentionally used because the current Next.js ESL
 ## Project map
 
 ```text
-src/app/                App Router pages, metadata, RSS, API and cron routes
-src/components/         Publication UI and shadcn-style Radix primitives
-src/lib/sources/        Fixed-endpoint collectors and deterministic normalization
-src/lib/editorial/      Pure curation, selection, excerpts, novelty and shared candidate preparation
-src/lib/pipeline/       Bounded orchestration, immutable progress transitions and checkpoint contract
-src/lib/db/             Drizzle schema, pool, read models, leases and atomic publication
-drizzle/                Versioned migrations and Drizzle snapshots
-src/lib/schemas.ts     Server-only runtime schemas for domain and persistence boundaries
-src/lib/presentation.ts Client-safe reading and search contracts
-src/lib/types.ts       Inferred model types shared by server and UI
-scripts/                Manual generation, migrations, source diagnostics
-tests/                  Business logic and PostgreSQL contract tests
+src/app/                          App Router pages, metadata, RSS, API and cron routes
+src/components/layout/            Header, footer, brand and artwork
+src/components/briefing/          Story reader, source details, themes and sharing
+src/components/archive/           Edition archive
+src/components/radar/             Repository cards
+src/components/ui/                Shared shadcn-style Radix primitives
+src/components/empty-state.tsx    Shared first-edition and recovery presentation
+src/lib/editorial/                Pure curation, selection, excerpts, novelty and themes
+src/lib/pipeline/                 Orchestration, immutable transitions and checkpoint contract
+src/lib/sources/                  Fixed-endpoint collectors and deterministic normalization
+src/lib/db/                       Drizzle schema, pool, read models, leases and atomic publication
+src/lib/http/                     Cron authorization and RSS serialization
+src/lib/preview/                  Validated local preview, historical fallback and source snapshot
+src/lib/editions.ts               Edition services, preview policy and React request caching
+src/lib/schemas.ts                Server-only domain and persistence schemas
+src/lib/presentation.ts           Client-safe reading and search contracts
+src/lib/types.ts                  Inferred model types shared by server and UI
+scripts/briefing/                 Generate, revise and refresh repository metadata
+scripts/db/                       Explicit migration command
+scripts/sources/                  Source diagnostics and local preview refresh
+tests/                            Tests grouped by architecture, db, editorial, http, pipeline and sources
+tests/support/                    Shared fixtures and test-only server marker
+drizzle/                          Versioned migrations and Drizzle snapshots
 ```
 
 ## Server and browser boundaries
@@ -165,6 +174,6 @@ Collection, curation, excerpt extraction, generation, GitHub access, and Postgre
 
 Server Components call `editions.ts` directly. Reading pages serialize a `BriefingView` containing the stories, repository cards, source notes, edition date, and display flags. Generation reports, counters, and checkpoints stay on the server. The browser manages navigation, dialogs, filters, sharing, and the existing same-origin search request. `presentation.ts` is the small client-safe validation contract; domain schemas remain server-only.
 
-The npm maintenance commands set Node's `react-server` condition explicitly so the same protected modules can run in trusted local CLI processes. For a direct invocation, use `node --conditions=react-server --import tsx scripts/<command>.ts`. This condition is not a substitute for credentials or cron authorization. Vitest substitutes only the marker in its Node test environment; a dependency-graph test checks every Client Component, and the production build uses Next.js's real boundary enforcement.
+The npm maintenance commands set Node's `react-server` condition explicitly so the same protected modules can run in trusted local CLI processes. For a direct invocation, use `node --conditions=react-server --import tsx scripts/<area>/<command>.ts`. This condition is not a substitute for credentials or cron authorization. Vitest substitutes only the marker in its Node test environment; a dependency-graph test checks every Client Component, and the production build uses Next.js's real boundary enforcement.
 
 Business outcomes remain in saved editions and cron responses.

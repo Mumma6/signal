@@ -4,7 +4,7 @@ import { evaluateArticles, sameDevelopment, scoreArticle } from "@/lib/editorial
 import { discoverThemes } from "@/lib/editorial/themes";
 import { balanceCandidates } from "@/lib/editorial/balance";
 import { mapSettled } from "@/lib/concurrency";
-import { article } from "./fixtures";
+import { article } from "../support/fixtures";
 
 describe("provider-free curation", () => {
   it("evaluates and extracts without credentials or network calls", async () => {

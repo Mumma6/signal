@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { selectArticles } from "@/lib/editorial/selection";
 import { summarySchema, validateEvaluations, validateGrounding } from "@/lib/editorial/editor";
-import { article, editor, story } from "./fixtures";
-import { checkpoint } from "./fixtures";
+import { article, editor, story } from "../support/fixtures";
+import { checkpoint } from "../support/fixtures";
 import { isPartial } from "@/lib/editorial/copy";
-import { sampleEdition } from "@/lib/sample";
+import { sampleEdition } from "@/lib/preview";
 
 describe("editorial checks", () => {
   it("does not label a recovered edition partial just because an earlier AI attempt failed", () => {

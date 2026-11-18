@@ -1,7 +1,7 @@
 import "server-only";
-import type { Edition } from "./types";
-import { editionSchema } from "./schemas";
-import preview from "./preview.json";
+import type { Edition } from "../types";
+import { editionSchema } from "../schemas";
+import preview from "./snapshot.json";
 const radarProjects = [
   {
     name: "ollama/ollama",

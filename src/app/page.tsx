@@ -1,4 +1,4 @@
-import { Briefing } from "@/components/briefing";
+import { Briefing } from "@/components/briefing/briefing";
 import { getLatestEdition, toBriefingView } from "@/lib/editions";
 import { EmptyState } from "@/components/empty-state";
 export const dynamic = "force-dynamic";

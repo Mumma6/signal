@@ -1,13 +1,13 @@
-import { prepareCandidates } from "../src/lib/editorial/prepare";
+import { prepareCandidates } from "../../src/lib/editorial/prepare";
 import { config } from "dotenv";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { collectArticles } from "../src/lib/sources/collect";
-import { collectRepositories } from "../src/lib/sources/github";
-import { createEditor } from "../src/lib/editorial/editor";
-import { selectArticles } from "../src/lib/editorial/selection";
-import { editionCopy } from "../src/lib/editorial/copy";
-import type { Edition } from "../src/lib/types";
+import { collectArticles } from "../../src/lib/sources/collect";
+import { collectRepositories } from "../../src/lib/sources/github";
+import { createEditor } from "../../src/lib/editorial/editor";
+import { selectArticles } from "../../src/lib/editorial/selection";
+import { editionCopy } from "../../src/lib/editorial/copy";
+import type { Edition } from "../../src/lib/types";
 config({ path: ".env.local" });
 async function main() {
   const now = new Date();
@@ -49,7 +49,7 @@ async function main() {
     },
   };
   await writeFile(
-    fileURLToPath(new URL("../src/lib/preview.json", import.meta.url)),
+    fileURLToPath(new URL("../../src/lib/preview/snapshot.json", import.meta.url)),
     `${JSON.stringify(edition, null, 2)}\n`,
   );
   console.info(

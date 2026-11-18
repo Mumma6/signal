@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignalMark } from "./brand";
+import { SignalMark } from "./layout/brand";
 import { Button } from "./ui/button";
 export function EmptyState() {
   return (

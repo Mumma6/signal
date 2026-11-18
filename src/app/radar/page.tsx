@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { GitFork as Github, ArrowUpRight } from "lucide-react";
 import { getLatestEdition } from "@/lib/editions";
-import { RadarCard } from "@/components/radar-card";
+import { RadarCard } from "@/components/radar/radar-card";
 import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "GitHub Radar",

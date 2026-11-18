@@ -1,8 +1,8 @@
 "use client";
 import { ArrowUpRight, FileText, Check } from "lucide-react";
 import type { Story } from "@/lib/types";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Button } from "../ui/button";
 import { formatDate } from "@/lib/utils";
 export function SourceDetails({ story, sample }: { story: Story; sample: boolean }) {
   const extracted = story.summaryKind === "source-excerpt";

@@ -9,7 +9,7 @@ import * as schema from "@/lib/db/schema";
 import { createEditionReader } from "@/lib/db/edition-reader";
 import { createStore } from "@/lib/db/briefing-store";
 import type { getDb } from "@/lib/db";
-import { article, checkpoint, story } from "./fixtures";
+import { article, checkpoint, story } from "../support/fixtures";
 import { reviseToday } from "@/lib/db/revise";
 import { runPipeline } from "@/lib/pipeline/run";
 import { createEditor } from "@/lib/editorial/editor";
@@ -43,6 +43,30 @@ describe("PostgreSQL publication contract", () => {
     expect(row.runId).toBeNull();
     expect(row.leaseUntil).toBeNull();
     expect(row.checkpoint).toEqual({ phase: "broken" });
+  });
+  it("resumes a saved checkpoint with obsolete metadata and publishes without recollecting", async () => {
+    const oldRun = randomUUID();
+    await store.claim("2026-11-16", oldRun);
+    const saved = { ...checkpoint(), executionId: randomUUID() };
+    await db.execute(sql`UPDATE briefings SET checkpoint = ${JSON.stringify(saved)}::jsonb`);
+    await store.release("2026-11-16", oldRun);
+
+    const result = await runPipeline("2026-11-16", {
+      store,
+      editor: createEditor(),
+      collect: async () => {
+        throw new Error("Saved material must be reused");
+      },
+      radar: async () => {
+        throw new Error("Saved repositories must be reused");
+      },
+    });
+
+    expect(result.status).toBe("published");
+    expect((await db.select().from(schema.briefings))[0].checkpoint).toBeNull();
+    expect((await db.select().from(schema.briefingArticles)).map((row) => row.articleId)).toEqual([
+      "a",
+    ]);
   });
   it("hydrates published read models through the same database queries used by pages", async () => {
     const reader = createEditionReader(testDb);

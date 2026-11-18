@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { authorizedCron } from "@/lib/cron";
-import { editionFeed } from "@/lib/feed";
-import { sampleEdition } from "@/lib/sample";
+import { authorizedCron } from "@/lib/http/cron";
+import { editionFeed } from "@/lib/http/feed";
+import { sampleEdition } from "@/lib/preview";
 describe("security and isolation", () => {
   it("fails closed when cron authorization is missing, short or incorrect", () => {
     const secret = "a".repeat(64);

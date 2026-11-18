@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { listEditions } from "@/lib/editions";
-import { ArchiveList } from "@/components/archive-list";
+import { ArchiveList } from "@/components/archive/archive-list";
 export const metadata: Metadata = {
   title: "The archive",
   description: "Revisit past editions of Signal’s daily AI briefing.",

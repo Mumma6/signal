@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unpublishedArticles } from "@/lib/editorial/novelty";
-import { article } from "./fixtures";
+import { article } from "../support/fixtures";
 
 describe("publication history", () => {
   const previous = article("previous", {

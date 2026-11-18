@@ -3,7 +3,7 @@ import { deduplicate } from "@/lib/editorial/novelty";
 import { describe, it, expect } from "vitest";
 import { normalizeArticle, plainText } from "@/lib/sources/normalize";
 import { parseFeed } from "@/lib/sources/collect";
-import { article } from "./fixtures";
+import { article } from "../support/fixtures";
 
 describe("source normalization", () => {
   const now = new Date("2026-11-16T06:00:00Z");

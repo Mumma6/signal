@@ -1,4 +1,4 @@
-import { authorizedCron } from "@/lib/cron";
+import { authorizedCron } from "@/lib/http/cron";
 import { generateBriefing } from "@/lib/pipeline";
 export const runtime = "nodejs";
 export const maxDuration = 300;

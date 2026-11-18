@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { runPipeline } from "@/lib/pipeline/run";
 import { validDate } from "@/lib/dates";
-import { article, editor, memoryStore } from "./fixtures";
+import { article, editor, memoryStore } from "../support/fixtures";
 import type { Article } from "@/lib/types";
 
 const collection = (articles: Article[] = [article()]) =>
